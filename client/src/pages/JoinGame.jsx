@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { socket } from '../socket';
 
 export default function JoinGame() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [roomCode, setRoomCode] = useState('');
+
+  useEffect(() => {
+    const code = searchParams.get('code');
+    if (code) setRoomCode(code.toUpperCase());
+  }, []);
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

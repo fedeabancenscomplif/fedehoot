@@ -6,7 +6,8 @@ Clon de Kahoot self-hosteable para jugar trivia en tiempo real con amigos en la 
 
 - Crear y editar quizzes con hasta 4 respuestas por pregunta y tiempo configurable (10–60s)
 - **3 tipos de pregunta** (ver abajo)
-- Sala de espera con código de 6 letras para que se unan los jugadores
+- Sala de espera con código de 6 letras y **QR code** para unirse escaneando
+- **Imágenes en preguntas** por URL pública
 - Sincronización en tiempo real via WebSockets
 - Puntuación basada en velocidad: máximo 1000 puntos por pregunta, decrece con el tiempo
 - Leaderboard entre preguntas y podio final
@@ -20,6 +21,16 @@ Clon de Kahoot self-hosteable para jugar trivia en tiempo real con amigos en la 
 | **Una correcta** | Una sola respuesta es correcta | Toca una de las 4 opciones de color |
 | **Varias correctas** | Múltiples respuestas pueden ser correctas | Toca todas las que crea correctas y presiona "Confirmar". Requiere seleccionar exactamente las correctas para puntuar |
 | **Ordenar** | Los elementos deben ordenarse de cierta forma (ej: de mayor a menor precio) | Toca los elementos en el orden correcto. Al ubicar todos, se envía automáticamente. Puntuación parcial por posiciones acertadas |
+
+## Imágenes en preguntas
+
+En el editor de cada pregunta hay un campo opcional de URL de imagen. Pegá la dirección de cualquier imagen pública (clic derecho sobre una imagen en el browser → *Copiar dirección de imagen*) y aparece un preview en vivo. Durante el juego la imagen se muestra arriba del texto de la pregunta tanto en la pantalla del host como en el celular del jugador.
+
+> Las imágenes son opcionales — preguntas sin imagen se ven igual que siempre.
+
+## QR code para unirse
+
+En la sala de espera el host ve un QR code que los jugadores pueden escanear con la cámara del celular. El QR lleva directo a la pantalla de unirse con el código de sala ya precargado — solo falta escribir el nombre.
 
 ## Stack
 

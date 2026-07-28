@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { socket } from '../socket';
 
@@ -138,9 +139,18 @@ export default function HostGame() {
           <div className="text-7xl font-black tracking-widest bg-white text-kahoot-purple px-8 py-4 rounded-2xl shadow-xl">
             {roomCode}
           </div>
-          <p className="text-purple-200 mt-2 text-sm">
-            Los jugadores entran en <strong className="text-white">fedehoot-production.up.railway.app/join</strong>
-          </p>
+          <div className="flex flex-col items-center gap-3 mt-4">
+            <div className="bg-white p-3 rounded-2xl shadow-xl">
+              <QRCodeSVG
+                value={`${window.location.origin}/join?code=${roomCode}`}
+                size={160}
+                bgColor="#ffffff"
+                fgColor="#1a0533"
+              />
+            </div>
+            <p className="text-purple-200 text-sm">Escaneá para unirte</p>
+            <p className="text-purple-300 text-xs">o entrá a <strong className="text-white">fedehoot-production.up.railway.app/join</strong></p>
+          </div>
         </div>
 
         <div className="w-full max-w-md">
@@ -220,16 +230,19 @@ export default function HostGame() {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4">
-              {question.answers.map((a, i) => (
-                <div
-                  key={a.id}
-                  className="rounded-2xl p-5 flex items-center gap-3 text-white font-bold text-lg shadow-lg"
-                  style={{ backgroundColor: ANSWER_COLORS[i] }}
-                >
-                  <span className="text-2xl">{ANSWER_LABELS[i]}</span>
-                  <span>{a.text}</span>
-                </div>
-              ))}
+              {question.answers.map((a, i) => {
+                const isOddLast = question.answers.length % 2 === 1 && i === question.answers.length - 1;
+                return (
+                  <div
+                    key={a.id}
+                    className={`rounded-2xl p-5 flex items-center gap-3 text-white font-bold text-lg shadow-lg${isOddLast ? ' col-span-2' : ''}`}
+                    style={{ backgroundColor: ANSWER_COLORS[i] }}
+                  >
+                    <span className="text-2xl">{ANSWER_LABELS[i]}</span>
+                    <span>{a.text}</span>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -264,10 +277,11 @@ export default function HostGame() {
           ) : (
             question.answers.map((a, i) => {
               const isCorrect = results?.correctAnswerIds?.includes(a.id);
+              const isOddLast = question.answers.length % 2 === 1 && i === question.answers.length - 1;
               return (
                 <div
                   key={a.id}
-                  className={`rounded-xl p-4 mb-2 flex items-center gap-3 font-bold text-lg transition-opacity ${isCorrect ? '' : 'opacity-30'}`}
+                  className={`rounded-xl p-4 mb-2 flex items-center gap-3 font-bold text-lg transition-opacity${isCorrect ? '' : ' opacity-30'}${isOddLast ? ' mx-auto w-full' : ''}`}
                   style={{ backgroundColor: ANSWER_COLORS[i] }}
                 >
                   <span>{ANSWER_LABELS[i]}</span>

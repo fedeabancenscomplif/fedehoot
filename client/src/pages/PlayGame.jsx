@@ -204,18 +204,21 @@ export default function PlayGame() {
           <div className="flex-1 flex flex-col justify-center gap-3">
             {questionBox}
             <div className="grid grid-cols-2 gap-3">
-              {question.answers.map((a, i) => (
-                <button
-                  key={a.id}
-                  onClick={() => submitSingle(a.id)}
-                  disabled={Boolean(selectedId)}
-                  className="rounded-2xl p-5 flex flex-col items-center justify-center gap-2 text-white font-bold shadow-lg disabled:opacity-50 active:scale-95 transition-transform min-h-[100px]"
-                  style={{ backgroundColor: ANSWER_COLORS[i] }}
-                >
-                  <span className="text-4xl">{ANSWER_LABELS[i]}</span>
-                  <span className="text-sm font-normal text-center">{a.text}</span>
-                </button>
-              ))}
+              {question.answers.map((a, i) => {
+                const isOddLast = question.answers.length % 2 === 1 && i === question.answers.length - 1;
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => submitSingle(a.id)}
+                    disabled={Boolean(selectedId)}
+                    className={`rounded-2xl p-5 flex flex-col items-center justify-center gap-2 text-white font-bold shadow-lg disabled:opacity-50 active:scale-95 transition-transform min-h-[100px]${isOddLast ? ' col-span-2' : ''}`}
+                    style={{ backgroundColor: ANSWER_COLORS[i] }}
+                  >
+                    <span className="text-4xl">{ANSWER_LABELS[i]}</span>
+                    <span className="text-sm font-normal text-center">{a.text}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -234,12 +237,13 @@ export default function PlayGame() {
             <div className="grid grid-cols-2 gap-3">
               {question.answers.map((a, i) => {
                 const isSelected = selectedIds.has(a.id);
+                const isOddLast = question.answers.length % 2 === 1 && i === question.answers.length - 1;
                 return (
                   <button
                     key={a.id}
                     onClick={() => toggleMultiple(a.id)}
                     disabled={multiSubmitted}
-                    className={`rounded-2xl p-5 flex flex-col items-center justify-center gap-2 text-white font-bold shadow-lg active:scale-95 transition-all min-h-[100px] ${isSelected ? 'ring-4 ring-white' : 'opacity-70'}`}
+                    className={`rounded-2xl p-5 flex flex-col items-center justify-center gap-2 text-white font-bold shadow-lg active:scale-95 transition-all min-h-[100px]${isOddLast ? ' col-span-2' : ''} ${isSelected ? 'ring-4 ring-white' : 'opacity-70'}`}
                     style={{ backgroundColor: ANSWER_COLORS[i] }}
                   >
                     <span className="text-4xl">{isSelected ? '✓' : ANSWER_LABELS[i]}</span>
