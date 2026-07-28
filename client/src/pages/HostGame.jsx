@@ -170,14 +170,20 @@ export default function HostGame() {
           )}
         </div>
 
-        <div className="text-center">
-          <p className="text-purple-200 text-sm mb-3">{quizInfo?.title} · {quizInfo?.questionCount} preguntas</p>
+        <div className="text-center flex flex-col items-center gap-3">
+          <p className="text-purple-200 text-sm">{quizInfo?.title} · {quizInfo?.questionCount} preguntas</p>
           <button
             onClick={() => socket.emit('host:start-game')}
             disabled={players.length === 0}
             className="bg-green-500 hover:bg-green-400 disabled:opacity-40 disabled:cursor-not-allowed font-black text-2xl px-12 py-5 rounded-2xl transition-colors shadow-xl"
           >
             ¡Empezar!
+          </button>
+          <button
+            onClick={() => { socket.disconnect(); navigate('/quizzes'); }}
+            className="text-sm text-purple-400 hover:text-purple-200 mt-1"
+          >
+            Cancelar sala
           </button>
         </div>
       </div>
