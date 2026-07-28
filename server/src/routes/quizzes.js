@@ -60,19 +60,35 @@ router.post('/import', (req, res) => {
   res.json({ imported: count });
 });
 
-router.get('/:id', (req, res) => {
-  const quiz = db.prepare('SELECT * FROM quizzes WHERE id = ?').get(req.params.id);
-  if (!quiz) return res.status(404).json({ error: 'No encontrado' });
-
+function loadFullQuiz(id) {
+  const quiz = db.prepare('SELECT * FROM quizzes WHERE id = ?').get(id);
+  if (!quiz) return null;
   const questions = db.prepare(
     'SELECT * FROM questions WHERE quiz_id = ? ORDER BY order_index'
-  ).all(req.params.id);
+  ).all(id);
   for (const q of questions) {
     q.answers = db.prepare(
       'SELECT * FROM answers WHERE question_id = ? ORDER BY order_index'
     ).all(q.id);
   }
   quiz.questions = questions;
+  return quiz;
+}
+
+// Full data for the editor (includes is_correct)
+router.get('/:id/edit', (req, res) => {
+  const quiz = loadFullQuiz(req.params.id);
+  if (!quiz) return res.status(404).json({ error: 'No encontrado' });
+  res.json(quiz);
+});
+
+// Stripped data for game use — is_correct removed so players can't cheat
+router.get('/:id', (req, res) => {
+  const quiz = loadFullQuiz(req.params.id);
+  if (!quiz) return res.status(404).json({ error: 'No encontrado' });
+  for (const q of quiz.questions) {
+    q.answers = q.answers.map(({ is_correct: _, ...a }) => a);
+  }
   res.json(quiz);
 });
 

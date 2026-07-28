@@ -36,7 +36,7 @@ export default function QuizEditor() {
 
   useEffect(() => {
     if (!isEdit) return;
-    fetch(`/api/quizzes/${id}`)
+    fetch(`/api/quizzes/${id}/edit`)
       .then(r => r.json())
       .then(quiz => {
         setTitle(quiz.title);
@@ -159,7 +159,7 @@ export default function QuizEditor() {
   }
 
   async function exportQuiz() {
-    const quiz = await fetch(`/api/quizzes/${id}`).then(r => r.json());
+    const quiz = await fetch(`/api/quizzes/${id}/edit`).then(r => r.json());
     const payload = [{
       title: quiz.title,
       questions: quiz.questions.map(q => ({

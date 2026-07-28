@@ -52,6 +52,13 @@ export function setupSockets(io) {
   io.on('connection', (socket) => {
 
     socket.on('host:create-game', ({ quizId }) => {
+      // Clean up any room this socket already owns to prevent memory leak
+      const existingCode = socketToRoom.get(socket.id);
+      if (existingCode) {
+        rooms.delete(existingCode);
+        socket.leave(existingCode);
+      }
+
       const quiz = loadQuiz(quizId);
       if (!quiz) return socket.emit('game:error', { message: 'Quiz no encontrado' });
       if (!quiz.questions.length) return socket.emit('game:error', { message: 'El quiz no tiene preguntas' });
@@ -69,7 +76,10 @@ export function setupSockets(io) {
     });
 
     socket.on('player:join', ({ roomCode, nickname }) => {
-      const code = roomCode?.toUpperCase();
+      if (typeof nickname !== 'string' || !nickname.trim()) {
+        return socket.emit('game:error', { message: 'Nombre inválido' });
+      }
+      const code = typeof roomCode === 'string' ? roomCode.toUpperCase() : '';
       const room = rooms.get(code);
       if (!room) return socket.emit('game:error', { message: 'Sala no encontrada' });
 
