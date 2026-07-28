@@ -163,9 +163,9 @@ export default function QuizEditor() {
                 {questions.length > 1 && (
                   <button
                     onClick={() => removeQuestion(qi)}
-                    className="text-red-300 hover:text-red-200 text-sm"
+                    className="text-red-300 hover:text-red-200 text-lg leading-none"
                   >
-                    Eliminar
+                    ✕
                   </button>
                 )}
               </div>
