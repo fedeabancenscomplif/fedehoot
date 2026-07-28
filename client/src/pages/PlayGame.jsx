@@ -185,8 +185,15 @@ export default function PlayGame() {
     );
 
     const questionBox = (
-      <div className="bg-white text-gray-900 rounded-2xl p-4 text-center shadow-xl">
-        <p className="text-lg font-bold">{question.text}</p>
+      <div>
+        {question.imageUrl && (
+          <div className="rounded-2xl overflow-hidden max-h-48 bg-black/20 mb-2 shadow-xl">
+            <img src={question.imageUrl} alt="" className="w-full object-contain max-h-48 mx-auto" />
+          </div>
+        )}
+        <div className="bg-white text-gray-900 rounded-2xl p-4 text-center shadow-xl">
+          <p className="text-lg font-bold">{question.text}</p>
+        </div>
       </div>
     );
 

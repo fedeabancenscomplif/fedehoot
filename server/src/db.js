@@ -37,5 +37,6 @@ db.exec(`
 
 // Migration: add type column to existing databases
 try { db.exec("ALTER TABLE questions ADD COLUMN type TEXT NOT NULL DEFAULT 'single'"); } catch (_) {}
+try { db.exec('ALTER TABLE questions ADD COLUMN image_url TEXT'); } catch (_) {}
 
 export { db, randomUUID };

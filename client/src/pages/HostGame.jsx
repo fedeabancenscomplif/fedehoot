@@ -196,6 +196,11 @@ export default function HostGame() {
         </div>
 
         <div className="flex-1 flex flex-col justify-center">
+          {question.imageUrl && (
+            <div className="rounded-2xl overflow-hidden max-h-64 bg-black/20 mb-4 shadow-xl">
+              <img src={question.imageUrl} alt="" className="w-full object-contain max-h-64 mx-auto" />
+            </div>
+          )}
           <div className="bg-white text-gray-900 rounded-2xl p-6 text-center shadow-xl mb-8">
             <p className="text-2xl font-bold">{question.text}</p>
           </div>

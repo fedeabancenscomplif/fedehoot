@@ -57,6 +57,7 @@ export class GameRoom {
       questionNumber: this.currentQuestionIndex + 1,
       totalQuestions: this.quiz.questions.length,
       text: q.text,
+      imageUrl: q.image_url ?? null,
       timeLimit: q.time_limit,
       type,
       answers,

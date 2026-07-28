@@ -20,6 +20,7 @@ function newQuestion() {
     answers: ['', '', '', ''],
     correctIndex: 0,
     correctIndices: [],
+    imageUrl: '',
   };
 }
 
@@ -47,6 +48,7 @@ export default function QuizEditor() {
           answers: q.answers.map(a => a.text),
           correctIndex: q.answers.findIndex(a => a.is_correct),
           correctIndices: q.answers.map((a, i) => a.is_correct ? i : -1).filter(i => i >= 0),
+          imageUrl: q.image_url ?? '',
         })));
       });
   }, [id]);
@@ -126,6 +128,7 @@ export default function QuizEditor() {
           text: q.text.trim(),
           time_limit: q.time_limit,
           type: q.type,
+          image_url: q.imageUrl.trim() || null,
           answers: filledAnswers.map(({ text, i }) => ({
             text,
             is_correct: q.type === 'single'
@@ -163,6 +166,7 @@ export default function QuizEditor() {
         text: q.text,
         time_limit: q.time_limit,
         type: q.type ?? 'single',
+        image_url: q.image_url ?? null,
         answers: q.answers.map(a => ({ text: a.text, is_correct: Boolean(a.is_correct) })),
       })),
     }];
@@ -241,6 +245,27 @@ export default function QuizEditor() {
               placeholder="¿Cuál es la pregunta?"
               className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-purple-300 focus:outline-none focus:border-white mb-4"
             />
+
+            {/* Image URL */}
+            <div className="mb-4">
+              <input
+                value={q.imageUrl}
+                onChange={e => updateQuestion(qi, 'imageUrl', e.target.value)}
+                placeholder="URL de imagen (opcional) — buscá la imagen, clic derecho → copiar dirección"
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white placeholder-purple-300/70 focus:outline-none focus:border-white text-sm"
+              />
+              {q.imageUrl.trim() && (
+                <div className="mt-2 rounded-xl overflow-hidden max-h-40 bg-black/20">
+                  <img
+                    src={q.imageUrl.trim()}
+                    alt="preview"
+                    className="w-full object-contain max-h-40"
+                    onError={e => { e.target.style.display = 'none'; }}
+                    onLoad={e => { e.target.style.display = ''; }}
+                  />
+                </div>
+              )}
+            </div>
 
             {/* Single choice */}
             {q.type === 'single' && (
