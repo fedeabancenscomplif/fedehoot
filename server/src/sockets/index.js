@@ -32,7 +32,9 @@ function endQuestion(io, room, roomCode) {
   if (!data) return;
 
   io.to(roomCode).emit('game:question-results', {
-    correctAnswerId: data.correctAnswerId,
+    type: data.type,
+    correctAnswerIds: data.correctAnswerIds,
+    correctOrderedIds: data.correctOrderedIds,
     leaderboard: data.leaderboard,
   });
   for (const r of data.playerResults) {
@@ -40,6 +42,8 @@ function endQuestion(io, room, roomCode) {
       isCorrect: r.isCorrect,
       pointsEarned: r.pointsEarned,
       totalScore: r.totalScore,
+      correctPositions: r.correctPositions,
+      totalPositions: r.totalPositions,
     });
   }
 }
@@ -79,7 +83,6 @@ export function setupSockets(io) {
       io.to(code).emit('game:player-list', { players: room.getPlayerList() });
     });
 
-    // El jugador pide el estado actual al montar PlayGame
     socket.on('player:request-state', () => {
       const roomCode = socketToRoom.get(socket.id);
       const room = rooms.get(roomCode);
@@ -99,12 +102,12 @@ export function setupSockets(io) {
       room.questionTimer = setTimeout(() => endQuestion(io, room, roomCode), question.timeLimit * 1000);
     });
 
-    socket.on('player:answer', ({ answerId }) => {
+    socket.on('player:answer', ({ payload }) => {
       const roomCode = socketToRoom.get(socket.id);
       const room = rooms.get(roomCode);
       if (!room) return;
 
-      const result = room.submitAnswer(socket.id, answerId);
+      const result = room.submitAnswer(socket.id, payload);
       if (!result) return;
 
       socket.emit('player:answer-received');

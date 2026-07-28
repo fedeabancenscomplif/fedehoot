@@ -1,3 +1,12 @@
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export class GameRoom {
   constructor(roomCode, quiz, hostSocketId) {
     this.roomCode = roomCode;
@@ -8,7 +17,7 @@ export class GameRoom {
     this.currentQuestionIndex = -1;
     this.questionTimer = null;
     this.questionStartTime = null;
-    this.currentAnswers = new Map(); // socketId → { answerId, timeMs }
+    this.currentAnswers = new Map(); // socketId → { payload, timeMs }
   }
 
   addPlayer(socketId, nickname) {
@@ -39,21 +48,27 @@ export class GameRoom {
     if (!q) return null;
     this.currentAnswers.clear();
     this.questionStartTime = Date.now();
+
+    const type = q.type ?? 'single';
+    let answers = q.answers.map(a => ({ id: a.id, text: a.text }));
+    if (type === 'order') answers = shuffle(answers);
+
     return {
       questionNumber: this.currentQuestionIndex + 1,
       totalQuestions: this.quiz.questions.length,
       text: q.text,
       timeLimit: q.time_limit,
-      answers: q.answers.map(a => ({ id: a.id, text: a.text })),
+      type,
+      answers,
     };
   }
 
-  submitAnswer(socketId, answerId) {
+  submitAnswer(socketId, payload) {
     if (this.state !== 'QUESTION') return null;
     if (this.currentAnswers.has(socketId)) return null;
     const timeMs = Date.now() - this.questionStartTime;
-    this.currentAnswers.set(socketId, { answerId, timeMs });
-    return { answeredCount: this.currentAnswers.size, playerCount: this.players.size };
+    this.currentAnswers.set(socketId, { payload, timeMs });
+    return { answered: this.currentAnswers.size, total: this.players.size };
   }
 
   allAnswered() {
@@ -69,27 +84,72 @@ export class GameRoom {
     this.state = 'RESULTS';
 
     const q = this.quiz.questions[this.currentQuestionIndex];
-    const correct = q.answers.find(a => a.is_correct);
     const timeLimitMs = q.time_limit * 1000;
+    const type = q.type ?? 'single';
+
+    let correctAnswerIds = [];
+    let correctOrderedIds = [];
+
+    if (type === 'single') {
+      const c = q.answers.find(a => a.is_correct);
+      if (c) correctAnswerIds = [c.id];
+    } else if (type === 'multiple') {
+      correctAnswerIds = q.answers.filter(a => a.is_correct).map(a => a.id);
+    } else if (type === 'order') {
+      correctOrderedIds = [...q.answers].sort((a, b) => a.order_index - b.order_index).map(a => a.id);
+      correctAnswerIds = correctOrderedIds;
+    }
 
     const playerResults = [];
     for (const [socketId, player] of this.players) {
       const answer = this.currentAnswers.get(socketId);
       let pointsEarned = 0;
       let isCorrect = false;
+      let correctPositions = 0;
+      const totalPositions = type === 'order' ? correctOrderedIds.length : 0;
 
-      if (answer && answer.answerId === correct.id) {
-        isCorrect = true;
+      if (answer) {
         const timeRatio = Math.max(0, 1 - answer.timeMs / timeLimitMs);
-        pointsEarned = Math.round(500 + 500 * timeRatio);
+
+        if (type === 'single') {
+          isCorrect = answer.payload === correctAnswerIds[0];
+          if (isCorrect) pointsEarned = Math.round(500 + 500 * timeRatio);
+
+        } else if (type === 'multiple') {
+          const correctSet = new Set(correctAnswerIds);
+          const selectedSet = new Set(Array.isArray(answer.payload) ? answer.payload : []);
+          const allCorrect = [...correctSet].every(id => selectedSet.has(id));
+          const noWrong = [...selectedSet].every(id => correctSet.has(id));
+          isCorrect = allCorrect && noWrong;
+          if (isCorrect) pointsEarned = Math.round(500 + 500 * timeRatio);
+
+        } else if (type === 'order') {
+          const playerOrder = Array.isArray(answer.payload) ? answer.payload : [];
+          for (let i = 0; i < correctOrderedIds.length; i++) {
+            if (playerOrder[i] === correctOrderedIds[i]) correctPositions++;
+          }
+          isCorrect = correctPositions === correctOrderedIds.length;
+          const accuracy = correctOrderedIds.length > 0 ? correctPositions / correctOrderedIds.length : 0;
+          pointsEarned = Math.round(accuracy * (500 + 500 * timeRatio));
+        }
       }
 
       player.score += pointsEarned;
-      playerResults.push({ socketId, nickname: player.nickname, isCorrect, pointsEarned, totalScore: player.score });
+      playerResults.push({
+        socketId,
+        nickname: player.nickname,
+        isCorrect,
+        pointsEarned,
+        totalScore: player.score,
+        correctPositions,
+        totalPositions,
+      });
     }
 
     return {
-      correctAnswerId: correct.id,
+      type,
+      correctAnswerIds,
+      correctOrderedIds,
       playerResults,
       leaderboard: this.getLeaderboard(),
     };

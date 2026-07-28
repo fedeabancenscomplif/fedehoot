@@ -23,6 +23,7 @@ db.exec(`
     quiz_id     TEXT    NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
     text        TEXT    NOT NULL,
     time_limit  INTEGER NOT NULL DEFAULT 20,
+    type        TEXT    NOT NULL DEFAULT 'single',
     order_index INTEGER NOT NULL
   );
   CREATE TABLE IF NOT EXISTS answers (
@@ -33,5 +34,8 @@ db.exec(`
     order_index  INTEGER NOT NULL
   );
 `);
+
+// Migration: add type column to existing databases
+try { db.exec("ALTER TABLE questions ADD COLUMN type TEXT NOT NULL DEFAULT 'single'"); } catch (_) {}
 
 export { db, randomUUID };

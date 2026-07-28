@@ -5,6 +5,12 @@ import { socket } from '../socket';
 const ANSWER_COLORS = ['#E21B3C', '#1368CE', '#D89E00', '#26890C'];
 const ANSWER_LABELS = ['▲', '◆', '●', '■'];
 
+const TYPE_LABELS = {
+  single:   'Una correcta',
+  multiple: 'Varias correctas',
+  order:    'Ordenar',
+};
+
 function Countdown({ seconds }) {
   const [remaining, setRemaining] = useState(seconds);
   const ref = useRef(null);
@@ -87,9 +93,7 @@ export default function HostGame() {
       setPhase('question');
     });
 
-    socket.on('game:answer-count', (count) => {
-      setAnswerCount(count);
-    });
+    socket.on('game:answer-count', (count) => setAnswerCount(count));
 
     socket.on('game:question-results', (data) => {
       setResults(data);
@@ -171,15 +175,23 @@ export default function HostGame() {
   }
 
   if (phase === 'question') {
+    const type = question.type ?? 'single';
     return (
       <div className="min-h-screen flex flex-col p-6 gap-6">
         <div className="flex items-center justify-between">
-          <span className="text-purple-200 font-semibold">
-            {question.questionNumber}/{question.totalQuestions}
-          </span>
+          <div>
+            <span className="text-purple-200 font-semibold">
+              {question.questionNumber}/{question.totalQuestions}
+            </span>
+            {type !== 'single' && (
+              <span className="ml-3 text-xs bg-white/20 text-white px-2 py-0.5 rounded-full font-semibold">
+                {TYPE_LABELS[type]}
+              </span>
+            )}
+          </div>
           <Countdown seconds={question.timeLimit} />
           <span className="text-purple-200 font-semibold">
-            {answerCount.answered}/{answerCount.total ?? players.length} respondieron
+            {answerCount.answered}/{answerCount.total || players.length} respondieron
           </span>
         </div>
 
@@ -188,18 +200,33 @@ export default function HostGame() {
             <p className="text-2xl font-bold">{question.text}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {question.answers.map((a, i) => (
-              <div
-                key={a.id}
-                className="rounded-2xl p-5 flex items-center gap-3 text-white font-bold text-lg shadow-lg"
-                style={{ backgroundColor: ANSWER_COLORS[i] }}
-              >
-                <span className="text-2xl">{ANSWER_LABELS[i]}</span>
-                <span>{a.text}</span>
-              </div>
-            ))}
-          </div>
+          {type === 'order' ? (
+            <div className="flex flex-col gap-3 max-w-lg mx-auto w-full">
+              <p className="text-purple-200 text-sm text-center">Los jugadores ordenarán estos elementos</p>
+              {question.answers.map((a, i) => (
+                <div
+                  key={a.id}
+                  className="rounded-2xl p-4 flex items-center gap-3 text-white font-bold text-lg shadow-lg bg-white/15"
+                >
+                  <span className="text-white/40 font-black">·</span>
+                  <span>{a.text}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              {question.answers.map((a, i) => (
+                <div
+                  key={a.id}
+                  className="rounded-2xl p-5 flex items-center gap-3 text-white font-bold text-lg shadow-lg"
+                  style={{ backgroundColor: ANSWER_COLORS[i] }}
+                >
+                  <span className="text-2xl">{ANSWER_LABELS[i]}</span>
+                  <span>{a.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -207,29 +234,49 @@ export default function HostGame() {
 
   if (phase === 'results') {
     const isLast = question.questionNumber === question.totalQuestions;
+    const type = results?.type ?? question?.type ?? 'single';
+
     return (
       <div className="min-h-screen flex flex-col p-6 gap-6">
         <div className="text-center mb-2">
-          <p className="text-purple-200 font-semibold mb-2">Respuesta correcta</p>
-          {question.answers.map((a, i) => {
-            const isCorrect = a.id === results.correctAnswerId;
-            return (
-              <div
-                key={a.id}
-                className={`rounded-xl p-4 mb-2 flex items-center gap-3 font-bold text-lg transition-opacity ${isCorrect ? '' : 'opacity-30'}`}
-                style={{ backgroundColor: ANSWER_COLORS[i] }}
-              >
-                <span>{ANSWER_LABELS[i]}</span>
-                <span>{a.text}</span>
-                {isCorrect && <span className="ml-auto">✓</span>}
-              </div>
-            );
-          })}
+          <p className="text-purple-200 font-semibold mb-3">Respuesta correcta</p>
+
+          {type === 'order' ? (
+            <div className="max-w-md mx-auto">
+              {(results?.correctOrderedIds ?? []).map((id, i) => {
+                const answer = question.answers.find(a => a.id === id);
+                return (
+                  <div
+                    key={id}
+                    className="flex items-center gap-4 bg-green-500 rounded-xl p-4 mb-2 font-bold text-lg"
+                  >
+                    <span className="font-black text-2xl w-8 text-center">{i + 1}</span>
+                    <span>{answer?.text}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            question.answers.map((a, i) => {
+              const isCorrect = results?.correctAnswerIds?.includes(a.id);
+              return (
+                <div
+                  key={a.id}
+                  className={`rounded-xl p-4 mb-2 flex items-center gap-3 font-bold text-lg transition-opacity ${isCorrect ? '' : 'opacity-30'}`}
+                  style={{ backgroundColor: ANSWER_COLORS[i] }}
+                >
+                  <span>{ANSWER_LABELS[i]}</span>
+                  <span>{a.text}</span>
+                  {isCorrect && <span className="ml-auto">✓</span>}
+                </div>
+              );
+            })
+          )}
         </div>
 
         <div className="flex-1">
           <p className="text-purple-200 font-semibold mb-3 text-center">Tabla de posiciones</p>
-          <Leaderboard leaderboard={results.leaderboard} />
+          <Leaderboard leaderboard={results?.leaderboard ?? []} />
         </div>
 
         <div className="text-center">

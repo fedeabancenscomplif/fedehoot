@@ -40,12 +40,35 @@ export default function PlayGame() {
   const [phase, setPhase] = useState('lobby');
   const [players, setPlayers] = useState([]);
   const [question, setQuestion] = useState(null);
+
+  // single
   const [selectedId, setSelectedId] = useState(null);
+  // multiple
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [multiSubmitted, setMultiSubmitted] = useState(false);
+  // order
+  const [rankedIds, setRankedIds] = useState([]);
+  const [orderSubmitted, setOrderSubmitted] = useState(false);
+
   const [myResult, setMyResult] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [finalLeaderboard, setFinalLeaderboard] = useState([]);
 
   const { nickname, roomCode } = state ?? {};
+
+  // Auto-submit when all items are ranked for order type
+  useEffect(() => {
+    if (
+      !orderSubmitted &&
+      question?.type === 'order' &&
+      rankedIds.length > 0 &&
+      rankedIds.length === question?.answers?.length
+    ) {
+      setOrderSubmitted(true);
+      socket.emit('player:answer', { payload: rankedIds });
+      setPhase('answered');
+    }
+  }, [rankedIds.length]);
 
   useEffect(() => {
     if (!nickname || !roomCode) {
@@ -57,6 +80,10 @@ export default function PlayGame() {
     socket.on('game:question', (q) => {
       setQuestion(q);
       setSelectedId(null);
+      setSelectedIds(new Set());
+      setMultiSubmitted(false);
+      setRankedIds([]);
+      setOrderSubmitted(false);
       setMyResult(null);
       setPhase('question');
     });
@@ -76,7 +103,6 @@ export default function PlayGame() {
       navigate('/');
     });
 
-    // Pedir el estado actual en caso de que game:player-list ya haya llegado antes de montar
     socket.emit('player:request-state');
 
     return () => {
@@ -87,7 +113,6 @@ export default function PlayGame() {
       socket.off('game:question-results');
       socket.off('game:finished');
       socket.off('game:error');
-      // NO desconectamos acá — la conexión se cierra cuando el usuario sale del juego
     };
   }, []);
 
@@ -96,10 +121,33 @@ export default function PlayGame() {
     navigate('/');
   }
 
-  function submitAnswer(answerId) {
+  function submitSingle(answerId) {
     if (selectedId) return;
     setSelectedId(answerId);
-    socket.emit('player:answer', { answerId });
+    socket.emit('player:answer', { payload: answerId });
+  }
+
+  function toggleMultiple(id) {
+    if (multiSubmitted) return;
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  function confirmMultiple() {
+    if (multiSubmitted || selectedIds.size === 0) return;
+    setMultiSubmitted(true);
+    socket.emit('player:answer', { payload: [...selectedIds] });
+  }
+
+  function handleOrderTap(id) {
+    if (orderSubmitted) return;
+    setRankedIds(prev => {
+      if (prev.includes(id)) return prev.filter(i => i !== id);
+      return [...prev, id];
+    });
   }
 
   if (phase === 'lobby') {
@@ -126,54 +174,176 @@ export default function PlayGame() {
   }
 
   if (phase === 'question') {
-    return (
-      <div className="min-h-screen flex flex-col p-4 gap-4">
-        <div className="flex items-center justify-between">
-          <span className="text-purple-200 text-sm">
-            {question.questionNumber}/{question.totalQuestions}
-          </span>
-          <Countdown seconds={question.timeLimit} />
-          <span className="text-purple-200 text-sm invisible">x</span>
-        </div>
+    const type = question.type ?? 'single';
 
-        <div className="flex-1 flex flex-col justify-center gap-3">
-          <div className="bg-white text-gray-900 rounded-2xl p-4 text-center shadow-xl">
-            <p className="text-lg font-bold">{question.text}</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {question.answers.map((a, i) => (
-              <button
-                key={a.id}
-                onClick={() => submitAnswer(a.id)}
-                disabled={Boolean(selectedId)}
-                className="rounded-2xl p-5 flex flex-col items-center justify-center gap-2 text-white font-bold shadow-lg disabled:opacity-50 active:scale-95 transition-transform min-h-[100px]"
-                style={{ backgroundColor: ANSWER_COLORS[i] }}
-              >
-                <span className="text-4xl">{ANSWER_LABELS[i]}</span>
-                <span className="text-sm font-normal text-center">{a.text}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+    const header = (
+      <div className="flex items-center justify-between">
+        <span className="text-purple-200 text-sm">{question.questionNumber}/{question.totalQuestions}</span>
+        <Countdown seconds={question.timeLimit} />
+        <span className="text-purple-200 text-sm invisible">x</span>
       </div>
     );
+
+    const questionBox = (
+      <div className="bg-white text-gray-900 rounded-2xl p-4 text-center shadow-xl">
+        <p className="text-lg font-bold">{question.text}</p>
+      </div>
+    );
+
+    if (type === 'single') {
+      return (
+        <div className="min-h-screen flex flex-col p-4 gap-4">
+          {header}
+          <div className="flex-1 flex flex-col justify-center gap-3">
+            {questionBox}
+            <div className="grid grid-cols-2 gap-3">
+              {question.answers.map((a, i) => (
+                <button
+                  key={a.id}
+                  onClick={() => submitSingle(a.id)}
+                  disabled={Boolean(selectedId)}
+                  className="rounded-2xl p-5 flex flex-col items-center justify-center gap-2 text-white font-bold shadow-lg disabled:opacity-50 active:scale-95 transition-transform min-h-[100px]"
+                  style={{ backgroundColor: ANSWER_COLORS[i] }}
+                >
+                  <span className="text-4xl">{ANSWER_LABELS[i]}</span>
+                  <span className="text-sm font-normal text-center">{a.text}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (type === 'multiple') {
+      return (
+        <div className="min-h-screen flex flex-col p-4 gap-4">
+          {header}
+          <div className="flex-1 flex flex-col justify-center gap-3">
+            {questionBox}
+            <p className="text-center text-sm text-purple-200">
+              Seleccioná <strong className="text-white">todas las correctas</strong> y confirmá
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {question.answers.map((a, i) => {
+                const isSelected = selectedIds.has(a.id);
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => toggleMultiple(a.id)}
+                    disabled={multiSubmitted}
+                    className={`rounded-2xl p-5 flex flex-col items-center justify-center gap-2 text-white font-bold shadow-lg active:scale-95 transition-all min-h-[100px] ${isSelected ? 'ring-4 ring-white' : 'opacity-70'}`}
+                    style={{ backgroundColor: ANSWER_COLORS[i] }}
+                  >
+                    <span className="text-4xl">{isSelected ? '✓' : ANSWER_LABELS[i]}</span>
+                    <span className="text-sm font-normal text-center">{a.text}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={confirmMultiple}
+              disabled={multiSubmitted || selectedIds.size === 0}
+              className="bg-yellow-400 text-gray-900 font-black text-xl py-4 rounded-2xl hover:bg-yellow-300 disabled:opacity-50 transition-colors shadow-xl"
+            >
+              {multiSubmitted ? 'Enviado ✓' : 'Confirmar selección'}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (type === 'order') {
+      const allPlaced = rankedIds.length === question.answers.length;
+      return (
+        <div className="min-h-screen flex flex-col p-4 gap-4">
+          {header}
+          <div className="flex-1 flex flex-col justify-center gap-3">
+            {questionBox}
+            <div className="bg-white/10 rounded-xl p-3 text-center">
+              <p className="text-sm text-purple-200">
+                Tocá los elementos <strong className="text-white">en el orden correcto</strong>, del primero al último
+              </p>
+              <p className="text-xs text-purple-300 mt-1">
+                {rankedIds.length === 0
+                  ? 'Empezá tocando el que va primero'
+                  : allPlaced
+                  ? '¡Listo! Enviando...'
+                  : `Posición ${rankedIds.length + 1} de ${question.answers.length}`}
+              </p>
+            </div>
+            <div className="flex flex-col gap-3">
+              {question.answers.map((a) => {
+                const rank = rankedIds.indexOf(a.id) + 1;
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => handleOrderTap(a.id)}
+                    disabled={orderSubmitted}
+                    className={`flex items-center gap-4 rounded-2xl p-4 text-left font-bold transition-all active:scale-95 ${
+                      rank > 0 ? 'bg-yellow-400 text-gray-900' : 'bg-white/15 text-white hover:bg-white/25'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-lg border-2 flex-shrink-0 ${
+                      rank > 0 ? 'border-gray-900/30 bg-gray-900/10' : 'border-white/30'
+                    }`}>
+                      {rank || '·'}
+                    </div>
+                    <span className="text-base">{a.text}</span>
+                    {rank > 0 && (
+                      <span className="ml-auto text-xs opacity-60">Tocá para quitar</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
   }
 
   if (phase === 'answered') {
+    const type = question?.type ?? 'single';
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 text-center p-6">
         <div className="text-6xl animate-bounce">⏳</div>
         <p className="text-2xl font-bold">Respuesta enviada</p>
         <p className="text-purple-200">Esperando a los demás...</p>
-        {selectedId && question && (
+        {type === 'single' && selectedId && question && (
           <div
             className="rounded-2xl px-6 py-3 font-bold text-lg"
             style={{ backgroundColor: ANSWER_COLORS[question.answers.findIndex(a => a.id === selectedId)] }}
           >
-            {ANSWER_LABELS[question.answers.findIndex(a => a.id === selectedId)]}
-            {' '}
             {question.answers.find(a => a.id === selectedId)?.text}
+          </div>
+        )}
+        {type === 'multiple' && selectedIds.size > 0 && question && (
+          <div className="flex flex-wrap gap-2 justify-center max-w-xs">
+            {question.answers.filter(a => selectedIds.has(a.id)).map((a, idx) => (
+              <span
+                key={a.id}
+                className="rounded-xl px-4 py-2 font-bold text-sm"
+                style={{ backgroundColor: ANSWER_COLORS[question.answers.indexOf(a)] }}
+              >
+                {a.text}
+              </span>
+            ))}
+          </div>
+        )}
+        {type === 'order' && rankedIds.length > 0 && question && (
+          <div className="flex flex-col gap-2 text-left w-full max-w-xs">
+            {rankedIds.map((id, i) => {
+              const a = question.answers.find(a => a.id === id);
+              return (
+                <div key={id} className="flex items-center gap-3 bg-yellow-400/20 rounded-xl px-4 py-2">
+                  <span className="font-black text-yellow-300">{i + 1}</span>
+                  <span className="text-sm font-semibold">{a?.text}</span>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -182,16 +352,25 @@ export default function PlayGame() {
 
   if (phase === 'results') {
     const myPos = leaderboard.findIndex(p => p.nickname === nickname) + 1;
+    const type = question?.type ?? 'single';
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-6 text-center">
         {myResult ? (
           <>
-            <div className="text-7xl">{myResult.isCorrect ? '✅' : '❌'}</div>
+            <div className="text-7xl">
+              {type === 'order' && !myResult.isCorrect && myResult.correctPositions > 0
+                ? '🟡'
+                : myResult.isCorrect ? '✅' : '❌'}
+            </div>
             <div>
               <p className="text-3xl font-black">
-                {myResult.isCorrect ? '¡Correcto!' : 'Incorrecto'}
+                {type === 'order' && !myResult.isCorrect
+                  ? myResult.correctPositions > 0
+                    ? `${myResult.correctPositions}/${myResult.totalPositions} en orden`
+                    : 'Sin aciertos'
+                  : myResult.isCorrect ? '¡Correcto!' : 'Incorrecto'}
               </p>
-              {myResult.isCorrect && (
+              {myResult.pointsEarned > 0 && (
                 <p className="text-yellow-300 font-bold text-xl mt-1">
                   +{myResult.pointsEarned.toLocaleString()} puntos
                 </p>

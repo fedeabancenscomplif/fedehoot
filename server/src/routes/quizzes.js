@@ -24,6 +24,7 @@ router.get('/export', (_req, res) => {
         return {
           text: q.text,
           time_limit: q.time_limit,
+          type: q.type ?? 'single',
           answers: answers.map(a => ({ text: a.text, is_correct: Boolean(a.is_correct) })),
         };
       }),
@@ -114,7 +115,7 @@ function transaction(fn) {
 
 function saveQuestions(quizId, questions) {
   const insertQ = db.prepare(
-    'INSERT INTO questions (id, quiz_id, text, time_limit, order_index) VALUES (?, ?, ?, ?, ?)'
+    'INSERT INTO questions (id, quiz_id, text, time_limit, type, order_index) VALUES (?, ?, ?, ?, ?, ?)'
   );
   const insertA = db.prepare(
     'INSERT INTO answers (id, question_id, text, is_correct, order_index) VALUES (?, ?, ?, ?, ?)'
@@ -122,7 +123,7 @@ function saveQuestions(quizId, questions) {
   for (let i = 0; i < questions.length; i++) {
     const q = questions[i];
     const qId = randomUUID();
-    insertQ.run(qId, quizId, q.text, q.time_limit ?? 20, i);
+    insertQ.run(qId, quizId, q.text, q.time_limit ?? 20, q.type ?? 'single', i);
     for (let j = 0; j < (q.answers ?? []).length; j++) {
       const a = q.answers[j];
       insertA.run(randomUUID(), qId, a.text, a.is_correct ? 1 : 0, j);

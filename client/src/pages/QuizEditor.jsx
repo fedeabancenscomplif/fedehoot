@@ -5,13 +5,21 @@ import { randomUUID } from '../utils';
 const ANSWER_COLORS = ['bg-red-500', 'bg-blue-500', 'bg-yellow-500', 'bg-green-500'];
 const ANSWER_LABELS = ['A', 'B', 'C', 'D'];
 
+const QUESTION_TYPES = [
+  { value: 'single',   label: 'Una correcta',    icon: '●' },
+  { value: 'multiple', label: 'Varias correctas', icon: '■' },
+  { value: 'order',    label: 'Ordenar',          icon: '≡' },
+];
+
 function newQuestion() {
   return {
     _id: randomUUID(),
+    type: 'single',
     text: '',
     time_limit: 20,
     answers: ['', '', '', ''],
     correctIndex: 0,
+    correctIndices: [],
   };
 }
 
@@ -33,10 +41,12 @@ export default function QuizEditor() {
         setTitle(quiz.title);
         setQuestions(quiz.questions.map(q => ({
           _id: q.id,
+          type: q.type ?? 'single',
           text: q.text,
           time_limit: q.time_limit,
           answers: q.answers.map(a => a.text),
           correctIndex: q.answers.findIndex(a => a.is_correct),
+          correctIndices: q.answers.map((a, i) => a.is_correct ? i : -1).filter(i => i >= 0),
         })));
       });
   }, [id]);
@@ -50,6 +60,30 @@ export default function QuizEditor() {
       if (i !== qIndex) return q;
       const answers = [...q.answers];
       answers[aIndex] = value;
+      return { ...q, answers };
+    }));
+  }
+
+  function toggleCorrectIndex(qIndex, aIndex) {
+    setQuestions(prev => prev.map((q, i) => {
+      if (i !== qIndex) return q;
+      const has = q.correctIndices.includes(aIndex);
+      return {
+        ...q,
+        correctIndices: has
+          ? q.correctIndices.filter(ci => ci !== aIndex)
+          : [...q.correctIndices, aIndex],
+      };
+    }));
+  }
+
+  function moveAnswer(qIndex, aIndex, dir) {
+    setQuestions(prev => prev.map((q, i) => {
+      if (i !== qIndex) return q;
+      const answers = [...q.answers];
+      const target = aIndex + dir;
+      if (target < 0 || target >= answers.length) return q;
+      [answers[aIndex], answers[target]] = [answers[target], answers[aIndex]];
       return { ...q, answers };
     }));
   }
@@ -71,20 +105,37 @@ export default function QuizEditor() {
       const q = questions[i];
       if (!q.text.trim()) return setError(`Pregunta ${i + 1}: el texto es requerido`);
       const filled = q.answers.filter(a => a.trim());
-      if (filled.length < 2) return setError(`Pregunta ${i + 1}: necesitás al menos 2 respuestas`);
-      if (!q.answers[q.correctIndex]?.trim()) return setError(`Pregunta ${i + 1}: la respuesta correcta no puede estar vacía`);
+      if (filled.length < 2) return setError(`Pregunta ${i + 1}: necesitás al menos 2 opciones`);
+      if (q.type === 'single' && !q.answers[q.correctIndex]?.trim()) {
+        return setError(`Pregunta ${i + 1}: seleccioná la respuesta correcta`);
+      }
+      if (q.type === 'multiple') {
+        if (q.correctIndices.length < 2) return setError(`Pregunta ${i + 1}: marcá al menos 2 respuestas correctas`);
+        if (q.correctIndices.some(ci => !q.answers[ci]?.trim())) {
+          return setError(`Pregunta ${i + 1}: una respuesta correcta está vacía`);
+        }
+      }
     }
 
     setSaving(true);
     const payload = {
       title,
-      questions: questions.map(q => ({
-        text: q.text.trim(),
-        time_limit: q.time_limit,
-        answers: q.answers
-          .map((text, i) => ({ text: text.trim(), is_correct: i === q.correctIndex }))
-          .filter(a => a.text),
-      })),
+      questions: questions.map(q => {
+        const filledAnswers = q.answers.map((text, i) => ({ text: text.trim(), i })).filter(a => a.text);
+        return {
+          text: q.text.trim(),
+          time_limit: q.time_limit,
+          type: q.type,
+          answers: filledAnswers.map(({ text, i }) => ({
+            text,
+            is_correct: q.type === 'single'
+              ? i === q.correctIndex
+              : q.type === 'multiple'
+              ? q.correctIndices.includes(i)
+              : false,
+          })),
+        };
+      }),
     };
 
     const url = isEdit ? `/api/quizzes/${id}` : '/api/quizzes';
@@ -111,6 +162,7 @@ export default function QuizEditor() {
       questions: quiz.questions.map(q => ({
         text: q.text,
         time_limit: q.time_limit,
+        type: q.type ?? 'single',
         answers: q.answers.map(a => ({ text: a.text, is_correct: Boolean(a.is_correct) })),
       })),
     }];
@@ -145,6 +197,7 @@ export default function QuizEditor() {
       <div className="flex flex-col gap-6">
         {questions.map((q, qi) => (
           <div key={q._id} className="bg-white/10 rounded-2xl p-5">
+            {/* Header row */}
             <div className="flex items-center justify-between mb-3">
               <span className="font-bold text-sm text-purple-200">Pregunta {qi + 1}</span>
               <div className="flex items-center gap-3">
@@ -161,16 +214,27 @@ export default function QuizEditor() {
                   </select>
                 </label>
                 {questions.length > 1 && (
-                  <button
-                    onClick={() => removeQuestion(qi)}
-                    className="text-red-300 hover:text-red-200 text-lg leading-none"
-                  >
+                  <button onClick={() => removeQuestion(qi)} className="text-red-300 hover:text-red-200 text-lg leading-none">
                     ✕
                   </button>
                 )}
               </div>
             </div>
 
+            {/* Type selector */}
+            <div className="flex rounded-xl overflow-hidden border border-white/20 mb-4">
+              {QUESTION_TYPES.map(t => (
+                <button
+                  key={t.value}
+                  onClick={() => updateQuestion(qi, 'type', t.value)}
+                  className={`flex-1 py-2 px-1 text-xs font-bold transition-colors ${q.type === t.value ? 'bg-white text-purple-900' : 'text-white/50 hover:text-white'}`}
+                >
+                  {t.icon} {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Question text */}
             <input
               value={q.text}
               onChange={e => updateQuestion(qi, 'text', e.target.value)}
@@ -178,31 +242,101 @@ export default function QuizEditor() {
               className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-purple-300 focus:outline-none focus:border-white mb-4"
             />
 
-            <div className="grid grid-cols-2 gap-2">
-              {q.answers.map((answer, ai) => (
-                <label
-                  key={ai}
-                  className={`flex items-center gap-2 rounded-xl p-3 cursor-pointer transition-opacity ${ANSWER_COLORS[ai]} ${q.correctIndex === ai ? 'ring-4 ring-white' : 'opacity-80'}`}
-                >
-                  <input
-                    type="radio"
-                    name={`correct-${q._id}`}
-                    checked={q.correctIndex === ai}
-                    onChange={() => updateQuestion(qi, 'correctIndex', ai)}
-                    className="accent-white"
-                  />
-                  <span className="font-bold mr-1">{ANSWER_LABELS[ai]}</span>
-                  <input
-                    value={answer}
-                    onChange={e => updateAnswer(qi, ai, e.target.value)}
-                    placeholder={`Respuesta ${ANSWER_LABELS[ai]}`}
-                    className="flex-1 bg-transparent border-b border-white/40 text-white placeholder-white/60 focus:outline-none focus:border-white text-sm"
-                    onClick={e => e.stopPropagation()}
-                  />
-                </label>
-              ))}
-            </div>
-            <p className="text-xs text-purple-200 mt-2">Seleccioná el radio de la respuesta correcta</p>
+            {/* Single choice */}
+            {q.type === 'single' && (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  {q.answers.map((answer, ai) => (
+                    <label
+                      key={ai}
+                      className={`flex items-center gap-2 rounded-xl p-3 cursor-pointer ${ANSWER_COLORS[ai]} ${q.correctIndex === ai ? 'ring-4 ring-white' : 'opacity-80'}`}
+                    >
+                      <input
+                        type="radio"
+                        name={`correct-${q._id}`}
+                        checked={q.correctIndex === ai}
+                        onChange={() => updateQuestion(qi, 'correctIndex', ai)}
+                        className="accent-white"
+                      />
+                      <span className="font-bold mr-1">{ANSWER_LABELS[ai]}</span>
+                      <input
+                        value={answer}
+                        onChange={e => updateAnswer(qi, ai, e.target.value)}
+                        placeholder={`Respuesta ${ANSWER_LABELS[ai]}`}
+                        className="flex-1 bg-transparent border-b border-white/40 text-white placeholder-white/60 focus:outline-none focus:border-white text-sm"
+                        onClick={e => e.stopPropagation()}
+                      />
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-purple-200 mt-2">Seleccioná el radio de la respuesta correcta</p>
+              </>
+            )}
+
+            {/* Multiple choice */}
+            {q.type === 'multiple' && (
+              <>
+                <p className="text-xs text-purple-200 mb-2">Marcá todas las respuestas correctas (mínimo 2)</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {q.answers.map((answer, ai) => {
+                    const isMarked = q.correctIndices.includes(ai);
+                    return (
+                      <label
+                        key={ai}
+                        className={`flex items-center gap-2 rounded-xl p-3 cursor-pointer ${ANSWER_COLORS[ai]} ${isMarked ? 'ring-4 ring-white' : 'opacity-80'}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isMarked}
+                          onChange={() => toggleCorrectIndex(qi, ai)}
+                          className="accent-white"
+                        />
+                        <span className="font-bold mr-1">{ANSWER_LABELS[ai]}</span>
+                        <input
+                          value={answer}
+                          onChange={e => updateAnswer(qi, ai, e.target.value)}
+                          placeholder={`Opción ${ANSWER_LABELS[ai]}`}
+                          className="flex-1 bg-transparent border-b border-white/40 text-white placeholder-white/60 focus:outline-none focus:border-white text-sm"
+                          onClick={e => e.stopPropagation()}
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Order */}
+            {q.type === 'order' && (
+              <>
+                <p className="text-xs text-purple-200 mb-2">El orden de arriba hacia abajo es la respuesta correcta. Usá las flechas para reordenar.</p>
+                <div className="flex flex-col gap-2">
+                  {q.answers.map((answer, ai) => (
+                    <div key={ai} className="flex items-center gap-2">
+                      <span className="text-white/50 font-black text-sm w-5 text-center">{ai + 1}</span>
+                      <input
+                        value={answer}
+                        onChange={e => updateAnswer(qi, ai, e.target.value)}
+                        placeholder={`Elemento ${ai + 1}`}
+                        className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 text-white placeholder-purple-300 focus:outline-none focus:border-white text-sm"
+                      />
+                      <div className="flex flex-col gap-0.5">
+                        <button
+                          onClick={() => moveAnswer(qi, ai, -1)}
+                          disabled={ai === 0}
+                          className="text-white/50 hover:text-white disabled:opacity-20 text-xs leading-tight py-0.5 px-1"
+                        >▲</button>
+                        <button
+                          onClick={() => moveAnswer(qi, ai, 1)}
+                          disabled={ai === q.answers.length - 1}
+                          className="text-white/50 hover:text-white disabled:opacity-20 text-xs leading-tight py-0.5 px-1"
+                        >▼</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         ))}
       </div>
