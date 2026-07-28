@@ -1,0 +1,9 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "buildCommand": "npm install --prefix server && npm install --prefix client && npm run build --prefix client"
+  },
+  "deploy": {
+    "startCommand": "node server/src/index.js"
+  }
+}
