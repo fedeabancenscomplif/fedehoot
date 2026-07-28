@@ -1,0 +1,8 @@
+{
+  "name": "kahoot-clone",
+  "private": true,
+  "scripts": {
+    "dev": "npx concurrently -n server,client -c cyan,magenta \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "setup": "npm install --prefix server && npm install --prefix client"
+  }
+}
