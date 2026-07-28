@@ -139,7 +139,7 @@ export default function HostGame() {
             {roomCode}
           </div>
           <p className="text-purple-200 mt-2 text-sm">
-            Los jugadores entran en <strong className="text-white">localhost:5173/join</strong>
+            Los jugadores entran en <strong className="text-white">fedehoot-production.up.railway.app/join</strong>
           </p>
         </div>
 

@@ -5,11 +5,21 @@ Clon de Kahoot self-hosteable para jugar trivia en tiempo real con amigos en la 
 ## Features
 
 - Crear y editar quizzes con hasta 4 respuestas por pregunta y tiempo configurable (10–60s)
+- **3 tipos de pregunta** (ver abajo)
 - Sala de espera con código de 6 letras para que se unan los jugadores
 - Sincronización en tiempo real via WebSockets
 - Puntuación basada en velocidad: máximo 1000 puntos por pregunta, decrece con el tiempo
 - Leaderboard entre preguntas y podio final
-- Funciona desde el celular en la misma red WiFi
+- Funciona desde el celular en la misma red WiFi o por internet via Railway
+
+
+## Tipos de pregunta
+
+| Tipo | Descripción | UX del jugador |
+|---|---|---|
+| **Una correcta** | Una sola respuesta es correcta | Toca una de las 4 opciones de color |
+| **Varias correctas** | Múltiples respuestas pueden ser correctas | Toca todas las que crea correctas y presiona "Confirmar". Requiere seleccionar exactamente las correctas para puntuar |
+| **Ordenar** | Los elementos deben ordenarse de cierta forma (ej: de mayor a menor precio) | Toca los elementos en el orden correcto. Al ubicar todos, se envía automáticamente. Puntuación parcial por posiciones acertadas |
 
 ## Stack
 
@@ -112,7 +122,7 @@ Host crea sala → jugadores se unen con código
 | `host:start-game` | — |
 | `host:next-question` | — |
 | `player:join` | `{ roomCode, nickname }` |
-| `player:answer` | `{ answerId }` |
+| `player:answer` | `{ payload }` — string para una correcta, array de IDs para varias/ordenar |
 | `player:request-state` | — |
 
 ### Servidor → Cliente
@@ -122,7 +132,7 @@ Host crea sala → jugadores se unen con código
 | `game:player-list` | Lista actualizada de jugadores |
 | `game:question` | Nueva pregunta (sin revelar respuesta correcta) |
 | `game:answer-count` | Cuántos respondieron hasta ahora (solo al host) |
-| `game:question-results` | Respuesta correcta + leaderboard |
+| `game:question-results` | Respuesta(s) correcta(s) + leaderboard |
 | `player:joined` | Confirmación de entrada a la sala |
 | `player:answer-received` | Confirmación de respuesta enviada |
 | `player:your-result` | Resultado individual (correcto/incorrecto + puntos) |
