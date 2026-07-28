@@ -22,7 +22,7 @@ function Countdown({ seconds }) {
   return (
     <div className="flex items-center justify-center">
       <div
-        className="w-12 h-12 rounded-full flex items-center justify-center font-black text-xl border-4 border-white transition-all"
+        className="w-12 h-12 rounded-full flex items-center justify-center font-black text-xl border-4 border-white"
         style={{ background: `conic-gradient(white ${pct * 360}deg, rgba(255,255,255,0.2) 0deg)` }}
       >
         <span className="bg-kahoot-purple rounded-full w-9 h-9 flex items-center justify-center text-white text-base font-black">
@@ -54,37 +54,30 @@ export default function PlayGame() {
     }
 
     socket.on('game:player-list', ({ players }) => setPlayers(players));
-
     socket.on('game:question', (q) => {
       setQuestion(q);
       setSelectedId(null);
       setMyResult(null);
       setPhase('question');
     });
-
-    socket.on('player:answer-received', () => {
-      setPhase('answered');
-    });
-
-    socket.on('player:your-result', (result) => {
-      setMyResult(result);
-    });
-
+    socket.on('player:answer-received', () => setPhase('answered'));
+    socket.on('player:your-result', (result) => setMyResult(result));
     socket.on('game:question-results', ({ leaderboard }) => {
       setLeaderboard(leaderboard);
       setPhase('results');
     });
-
     socket.on('game:finished', ({ leaderboard }) => {
       setFinalLeaderboard(leaderboard);
       setPhase('finished');
     });
-
     socket.on('game:error', ({ message }) => {
       alert(message);
       socket.disconnect();
       navigate('/');
     });
+
+    // Pedir el estado actual en caso de que game:player-list ya haya llegado antes de montar
+    socket.emit('player:request-state');
 
     return () => {
       socket.off('game:player-list');
@@ -94,9 +87,14 @@ export default function PlayGame() {
       socket.off('game:question-results');
       socket.off('game:finished');
       socket.off('game:error');
-      socket.disconnect();
+      // NO desconectamos acá — la conexión se cierra cuando el usuario sale del juego
     };
   }, []);
+
+  function leave() {
+    socket.disconnect();
+    navigate('/');
+  }
 
   function submitAnswer(answerId) {
     if (selectedId) return;
@@ -120,6 +118,9 @@ export default function PlayGame() {
         <div className="text-sm text-purple-300">
           {players.length} jugador{players.length !== 1 ? 'es' : ''} en la sala
         </div>
+        <button onClick={leave} className="text-xs text-purple-400 hover:text-purple-200 mt-4">
+          Salir
+        </button>
       </div>
     );
   }
@@ -146,7 +147,7 @@ export default function PlayGame() {
                 key={a.id}
                 onClick={() => submitAnswer(a.id)}
                 disabled={Boolean(selectedId)}
-                className="rounded-2xl p-5 flex flex-col items-center justify-center gap-2 text-white font-bold text-3xl shadow-lg disabled:opacity-50 active:scale-95 transition-transform min-h-[100px]"
+                className="rounded-2xl p-5 flex flex-col items-center justify-center gap-2 text-white font-bold shadow-lg disabled:opacity-50 active:scale-95 transition-transform min-h-[100px]"
                 style={{ backgroundColor: ANSWER_COLORS[i] }}
               >
                 <span className="text-4xl">{ANSWER_LABELS[i]}</span>
@@ -251,10 +252,7 @@ export default function PlayGame() {
           ))}
         </div>
 
-        <button
-          onClick={() => navigate('/')}
-          className="bg-white text-kahoot-purple font-bold py-3 px-8 rounded-2xl"
-        >
+        <button onClick={leave} className="bg-white text-kahoot-purple font-bold py-3 px-8 rounded-2xl">
           Inicio
         </button>
       </div>

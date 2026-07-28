@@ -79,6 +79,14 @@ export function setupSockets(io) {
       io.to(code).emit('game:player-list', { players: room.getPlayerList() });
     });
 
+    // El jugador pide el estado actual al montar PlayGame
+    socket.on('player:request-state', () => {
+      const roomCode = socketToRoom.get(socket.id);
+      const room = rooms.get(roomCode);
+      if (!room) return;
+      socket.emit('game:player-list', { players: room.getPlayerList() });
+    });
+
     socket.on('host:start-game', () => {
       const roomCode = socketToRoom.get(socket.id);
       const room = rooms.get(roomCode);
