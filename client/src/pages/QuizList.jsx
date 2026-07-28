@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function QuizList() {
@@ -6,7 +6,6 @@ export default function QuizList() {
   const [loading, setLoading] = useState(true);
   const [importMsg, setImportMsg] = useState('');
   const [importing, setImporting] = useState(false);
-  const fileRef = useRef();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,25 +18,6 @@ export default function QuizList() {
     if (!confirm('¿Eliminar este quiz?')) return;
     await fetch(`/api/quizzes/${id}`, { method: 'DELETE' });
     setQuizzes(prev => prev.filter(q => q.id !== id));
-  }
-
-  async function exportQuiz(id, title) {
-    const quiz = await fetch(`/api/quizzes/${id}`).then(r => r.json());
-    const payload = [{
-      title: quiz.title,
-      questions: quiz.questions.map(q => ({
-        text: q.text,
-        time_limit: q.time_limit,
-        answers: q.answers.map(a => ({ text: a.text, is_correct: Boolean(a.is_correct) })),
-      })),
-    }];
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
   }
 
   async function handleImport(e) {
@@ -86,6 +66,17 @@ export default function QuizList() {
         </div>
       </div>
 
+      {/* Banner de aviso persistencia */}
+      <div className="flex items-start gap-3 bg-yellow-400/10 border border-yellow-400/40 rounded-2xl px-4 py-3 mb-6">
+        <span className="text-lg mt-0.5">⚡</span>
+        <div>
+          <p className="font-bold text-yellow-300 text-sm mb-1">Guardá tus quizzes</p>
+          <p className="text-white/70 text-sm leading-relaxed">
+            El servidor se reinicia de vez en cuando y los quizzes se borran. Usá el botón <strong className="text-white">Exportar</strong> en el editor para bajar cada quiz como archivo y volvé a importarlo cuando quieras jugar.
+          </p>
+        </div>
+      </div>
+
       {importMsg && (
         <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-semibold ${importMsg.startsWith('✓') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
           {importMsg}
@@ -117,13 +108,6 @@ export default function QuizList() {
                 className="text-sm bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors"
               >
                 Editar
-              </button>
-              <button
-                onClick={() => exportQuiz(quiz.id, quiz.title)}
-                className="text-sm bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors"
-                title="Exportar como JSON"
-              >
-                ↓
               </button>
               <button
                 onClick={() => navigate(`/host/${quiz.id}`)}

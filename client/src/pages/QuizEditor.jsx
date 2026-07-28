@@ -104,6 +104,25 @@ export default function QuizEditor() {
     }
   }
 
+  async function exportQuiz() {
+    const quiz = await fetch(`/api/quizzes/${id}`).then(r => r.json());
+    const payload = [{
+      title: quiz.title,
+      questions: quiz.questions.map(q => ({
+        text: q.text,
+        time_limit: q.time_limit,
+        answers: q.answers.map(a => ({ text: a.text, is_correct: Boolean(a.is_correct) })),
+      })),
+    }];
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${quiz.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="min-h-screen p-6 max-w-2xl mx-auto pb-32">
       <div className="mb-6">
@@ -201,20 +220,30 @@ export default function QuizEditor() {
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-kahoot-dark/90 backdrop-blur flex justify-end gap-3">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-kahoot-dark/90 backdrop-blur flex justify-between items-center gap-3">
         <button
           onClick={() => navigate('/quizzes')}
           className="px-6 py-3 rounded-xl text-purple-200 hover:text-white font-semibold"
         >
           Cancelar
         </button>
-        <button
-          onClick={save}
-          disabled={saving}
-          className="bg-yellow-400 text-gray-900 font-bold px-8 py-3 rounded-xl hover:bg-yellow-300 disabled:opacity-50 transition-colors"
-        >
-          {saving ? 'Guardando...' : 'Guardar quiz'}
-        </button>
+        <div className="flex gap-3">
+          {isEdit && (
+            <button
+              onClick={exportQuiz}
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+            >
+              ↓ Exportar
+            </button>
+          )}
+          <button
+            onClick={save}
+            disabled={saving}
+            className="bg-yellow-400 text-gray-900 font-bold px-8 py-3 rounded-xl hover:bg-yellow-300 disabled:opacity-50 transition-colors"
+          >
+            {saving ? 'Guardando...' : 'Guardar quiz'}
+          </button>
+        </div>
       </div>
     </div>
   );
