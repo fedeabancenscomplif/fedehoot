@@ -1,58 +1,59 @@
 import { Router } from 'express';
-import { db, randomUUID } from '../db.js';
+import { supabase, randomUUID } from '../db.js';
 
 const router = Router();
 
-router.get('/', (_req, res) => {
-  const quizzes = db.prepare('SELECT id, title, created_at FROM quizzes ORDER BY created_at DESC').all();
-  res.json(quizzes);
+router.get('/', async (_req, res) => {
+  const { data, error } = await supabase
+    .from('quizzes')
+    .select('id, title, created_at')
+    .order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 });
 
-// Export debe ir antes de /:id para que Express no lo interprete como un ID
-router.get('/export', (_req, res) => {
-  const quizzes = db.prepare('SELECT * FROM quizzes ORDER BY created_at ASC').all();
-  const result = quizzes.map(quiz => {
-    const questions = db.prepare(
-      'SELECT * FROM questions WHERE quiz_id = ? ORDER BY order_index'
-    ).all(quiz.id);
-    return {
-      title: quiz.title,
-      questions: questions.map(q => {
-        const answers = db.prepare(
-          'SELECT * FROM answers WHERE question_id = ? ORDER BY order_index'
-        ).all(q.id);
-        return {
-          text: q.text,
-          time_limit: q.time_limit,
-          type: q.type ?? 'single',
-          image_url: q.image_url ?? null,
-          answers: answers.map(a => ({ text: a.text, is_correct: Boolean(a.is_correct) })),
-        };
-      }),
-    };
-  });
-
+// Export all quizzes as JSON (before /:id to avoid Express matching "export" as ID)
+router.get('/export', async (_req, res) => {
+  const { data: quizzes } = await supabase.from('quizzes').select('id, title').order('created_at');
+  const result = [];
+  for (const quiz of quizzes ?? []) {
+    const full = await loadFullQuiz(quiz.id);
+    if (!full) continue;
+    result.push({
+      title: full.title,
+      questions: full.questions.map(q => ({
+        text: q.text,
+        time_limit: q.time_limit,
+        type: q.type ?? 'single',
+        image_url: q.image_url ?? null,
+        answers: q.answers.map(a => ({ text: a.text, is_correct: Boolean(a.is_correct) })),
+      })),
+    });
+  }
   res.setHeader('Content-Disposition', 'attachment; filename="fedehoot-quizzes.json"');
   res.json(result);
 });
 
-router.post('/import', (req, res) => {
+router.post('/import', async (req, res) => {
   const quizzes = req.body;
   if (!Array.isArray(quizzes) || quizzes.length === 0) {
     return res.status(400).json({ error: 'El archivo debe contener un array de quizzes' });
   }
+  if (quizzes.length > 50) {
+    return res.status(400).json({ error: 'Máximo 50 quizzes por importación' });
+  }
 
   let count = 0;
   try {
-    transaction(() => {
-      for (const quiz of quizzes) {
-        if (!quiz.title?.trim() || !Array.isArray(quiz.questions) || quiz.questions.length === 0) continue;
-        const quizId = randomUUID();
-        db.prepare('INSERT INTO quizzes (id, title) VALUES (?, ?)').run(quizId, quiz.title.trim());
-        saveQuestions(quizId, quiz.questions);
-        count++;
-      }
-    });
+    for (const quiz of quizzes) {
+      if (!quiz.title?.trim() || !Array.isArray(quiz.questions) || quiz.questions.length === 0) continue;
+      if (quiz.questions.length > 50) continue;
+      const quizId = randomUUID();
+      const { error } = await supabase.from('quizzes').insert({ id: quizId, title: quiz.title.trim() });
+      if (error) throw error;
+      await saveQuestions(quizId, quiz.questions);
+      count++;
+    }
   } catch (e) {
     return res.status(400).json({ error: 'Formato inválido: ' + e.message });
   }
@@ -60,31 +61,16 @@ router.post('/import', (req, res) => {
   res.json({ imported: count });
 });
 
-function loadFullQuiz(id) {
-  const quiz = db.prepare('SELECT * FROM quizzes WHERE id = ?').get(id);
-  if (!quiz) return null;
-  const questions = db.prepare(
-    'SELECT * FROM questions WHERE quiz_id = ? ORDER BY order_index'
-  ).all(id);
-  for (const q of questions) {
-    q.answers = db.prepare(
-      'SELECT * FROM answers WHERE question_id = ? ORDER BY order_index'
-    ).all(q.id);
-  }
-  quiz.questions = questions;
-  return quiz;
-}
-
-// Full data for the editor (includes is_correct)
-router.get('/:id/edit', (req, res) => {
-  const quiz = loadFullQuiz(req.params.id);
+// Full quiz for editor (includes is_correct)
+router.get('/:id/edit', async (req, res) => {
+  const quiz = await loadFullQuiz(req.params.id);
   if (!quiz) return res.status(404).json({ error: 'No encontrado' });
   res.json(quiz);
 });
 
-// Stripped data for game use — is_correct removed so players can't cheat
-router.get('/:id', (req, res) => {
-  const quiz = loadFullQuiz(req.params.id);
+// Stripped quiz for game — is_correct removed so players can't cheat via API
+router.get('/:id', async (req, res) => {
+  const quiz = await loadFullQuiz(req.params.id);
   if (!quiz) return res.status(404).json({ error: 'No encontrado' });
   for (const q of quiz.questions) {
     q.answers = q.answers.map(({ is_correct: _, ...a }) => a);
@@ -92,58 +78,77 @@ router.get('/:id', (req, res) => {
   res.json(quiz);
 });
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const { title, questions = [] } = req.body;
   if (!title?.trim()) return res.status(400).json({ error: 'El título es requerido' });
 
   const quizId = randomUUID();
-  transaction(() => {
-    db.prepare('INSERT INTO quizzes (id, title) VALUES (?, ?)').run(quizId, title.trim());
-    saveQuestions(quizId, questions);
-  });
+  const { error } = await supabase.from('quizzes').insert({ id: quizId, title: title.trim() });
+  if (error) return res.status(500).json({ error: error.message });
+  await saveQuestions(quizId, questions);
   res.status(201).json({ id: quizId });
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   const { title, questions = [] } = req.body;
-  if (!db.prepare('SELECT id FROM quizzes WHERE id = ?').get(req.params.id)) {
-    return res.status(404).json({ error: 'No encontrado' });
+  const { data } = await supabase.from('quizzes').select('id').eq('id', req.params.id).single();
+  if (!data) return res.status(404).json({ error: 'No encontrado' });
+
+  if (title?.trim()) {
+    await supabase.from('quizzes').update({ title: title.trim() }).eq('id', req.params.id);
   }
-  transaction(() => {
-    if (title?.trim()) {
-      db.prepare('UPDATE quizzes SET title = ? WHERE id = ?').run(title.trim(), req.params.id);
-    }
-    db.prepare('DELETE FROM questions WHERE quiz_id = ?').run(req.params.id);
-    saveQuestions(req.params.id, questions);
-  });
+  await supabase.from('questions').delete().eq('quiz_id', req.params.id);
+  await saveQuestions(req.params.id, questions);
   res.json({ ok: true });
 });
 
-router.delete('/:id', (req, res) => {
-  db.prepare('DELETE FROM quizzes WHERE id = ?').run(req.params.id);
+router.delete('/:id', async (req, res) => {
+  await supabase.from('quizzes').delete().eq('id', req.params.id);
   res.json({ ok: true });
 });
 
-function transaction(fn) {
-  db.exec('BEGIN');
-  try { fn(); db.exec('COMMIT'); }
-  catch (e) { db.exec('ROLLBACK'); throw e; }
+async function loadFullQuiz(id) {
+  const { data: quiz } = await supabase.from('quizzes').select('*').eq('id', id).single();
+  if (!quiz) return null;
+
+  const { data: questions } = await supabase
+    .from('questions')
+    .select('*, answers(*)')
+    .eq('quiz_id', id)
+    .order('order_index');
+
+  quiz.questions = (questions ?? []).map(q => ({
+    ...q,
+    answers: (q.answers ?? []).sort((a, b) => a.order_index - b.order_index),
+  }));
+  return quiz;
 }
 
-function saveQuestions(quizId, questions) {
-  const insertQ = db.prepare(
-    'INSERT INTO questions (id, quiz_id, text, time_limit, type, image_url, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  );
-  const insertA = db.prepare(
-    'INSERT INTO answers (id, question_id, text, is_correct, order_index) VALUES (?, ?, ?, ?, ?)'
-  );
+async function saveQuestions(quizId, questions) {
   for (let i = 0; i < questions.length; i++) {
     const q = questions[i];
     const qId = randomUUID();
-    insertQ.run(qId, quizId, q.text, q.time_limit ?? 20, q.type ?? 'single', q.image_url ?? null, i);
-    for (let j = 0; j < (q.answers ?? []).length; j++) {
-      const a = q.answers[j];
-      insertA.run(randomUUID(), qId, a.text, a.is_correct ? 1 : 0, j);
+    const { error } = await supabase.from('questions').insert({
+      id: qId,
+      quiz_id: quizId,
+      text: q.text,
+      time_limit: q.time_limit ?? 20,
+      type: q.type ?? 'single',
+      image_url: q.image_url ?? null,
+      order_index: i,
+    });
+    if (error) throw error;
+
+    const answersToInsert = (q.answers ?? []).map((a, j) => ({
+      id: randomUUID(),
+      question_id: qId,
+      text: a.text,
+      is_correct: Boolean(a.is_correct),
+      order_index: j,
+    }));
+    if (answersToInsert.length > 0) {
+      const { error: aErr } = await supabase.from('answers').insert(answersToInsert);
+      if (aErr) throw aErr;
     }
   }
 }

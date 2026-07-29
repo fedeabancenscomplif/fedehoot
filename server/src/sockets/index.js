@@ -1,5 +1,5 @@
 import { GameRoom } from '../game/GameRoom.js';
-import { db } from '../db.js';
+import { supabase } from '../db.js';
 
 const rooms = new Map();        // roomCode → GameRoom
 const socketToRoom = new Map(); // socketId → roomCode
@@ -11,18 +11,20 @@ function genCode() {
   return code;
 }
 
-function loadQuiz(quizId) {
-  const quiz = db.prepare('SELECT * FROM quizzes WHERE id = ?').get(quizId);
+async function loadQuiz(quizId) {
+  const { data: quiz } = await supabase.from('quizzes').select('*').eq('id', quizId).single();
   if (!quiz) return null;
-  const questions = db.prepare(
-    'SELECT * FROM questions WHERE quiz_id = ? ORDER BY order_index'
-  ).all(quizId);
-  for (const q of questions) {
-    q.answers = db.prepare(
-      'SELECT * FROM answers WHERE question_id = ? ORDER BY order_index'
-    ).all(q.id);
-  }
-  quiz.questions = questions;
+
+  const { data: questions } = await supabase
+    .from('questions')
+    .select('*, answers(*)')
+    .eq('quiz_id', quizId)
+    .order('order_index');
+
+  quiz.questions = (questions ?? []).map(q => ({
+    ...q,
+    answers: (q.answers ?? []).sort((a, b) => a.order_index - b.order_index),
+  }));
   return quiz;
 }
 
@@ -51,7 +53,7 @@ function endQuestion(io, room, roomCode) {
 export function setupSockets(io) {
   io.on('connection', (socket) => {
 
-    socket.on('host:create-game', ({ quizId }) => {
+    socket.on('host:create-game', async ({ quizId }) => {
       // Clean up any room this socket already owns to prevent memory leak
       const existingCode = socketToRoom.get(socket.id);
       if (existingCode) {
@@ -59,7 +61,7 @@ export function setupSockets(io) {
         socket.leave(existingCode);
       }
 
-      const quiz = loadQuiz(quizId);
+      const quiz = await loadQuiz(quizId);
       if (!quiz) return socket.emit('game:error', { message: 'Quiz no encontrado' });
       if (!quiz.questions.length) return socket.emit('game:error', { message: 'El quiz no tiene preguntas' });
 
