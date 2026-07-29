@@ -19,10 +19,15 @@ export default function QuizList() {
 
   async function loadQuizzes() {
     setLoading(true);
-    const res = await authFetch('/api/quizzes');
-    const data = await res.json();
-    setQuizzes(data);
-    setLoading(false);
+    try {
+      const res = await authFetch('/api/quizzes');
+      const data = await res.json();
+      setQuizzes(Array.isArray(data) ? data : []);
+    } catch {
+      setQuizzes([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
