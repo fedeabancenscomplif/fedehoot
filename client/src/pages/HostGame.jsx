@@ -132,59 +132,98 @@ export default function HostGame() {
   }
 
   if (phase === 'lobby') {
+    const PLAYER_COLORS = ['#E21B3C','#1368CE','#D89E00','#26890C','#9B59B6','#E67E22','#1ABC9C','#E91E8C'];
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-8 p-6">
-        <div className="text-center">
-          <p className="text-purple-200 font-semibold mb-2">Código de sala</p>
-          <div className="text-7xl font-black tracking-widest bg-white text-kahoot-purple px-8 py-4 rounded-2xl shadow-xl">
-            {roomCode}
+      <div className="min-h-screen flex flex-col" style={{background:'linear-gradient(160deg,#1a0533 0%,#2e0b5e 60%,#1a0533 100%)'}}>
+
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-6 py-3 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <span className="text-white font-black text-lg tracking-tight">FedeHoot!</span>
+            <span className="text-purple-400 text-sm">·</span>
+            <span className="text-purple-200 text-sm font-semibold truncate max-w-xs">{quizInfo?.title}</span>
           </div>
-          <div className="flex flex-col items-center gap-3 mt-4">
-            <div className="bg-white p-3 rounded-2xl shadow-xl">
-              <QRCodeSVG
-                value={`${window.location.origin}/join?code=${roomCode}`}
-                size={160}
-                bgColor="#ffffff"
-                fgColor="#1a0533"
-              />
-            </div>
-            <p className="text-purple-200 text-sm">Escaneá para unirte</p>
-            <p className="text-purple-300 text-xs">o entrá a <strong className="text-white">fedehoot-production.up.railway.app/join</strong></p>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-white text-sm font-bold">{players.length} jugador{players.length !== 1 ? 'es' : ''}</span>
           </div>
         </div>
 
-        <div className="w-full max-w-md">
-          <p className="text-purple-200 text-sm mb-2 font-semibold">
-            Jugadores ({players.length})
-          </p>
-          {players.length === 0 ? (
-            <p className="text-center py-8 text-purple-300">Esperando jugadores...</p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {players.map(p => (
-                <span key={p.nickname} className="bg-white/20 rounded-full px-4 py-2 font-semibold">
-                  {p.nickname}
-                </span>
-              ))}
+        {/* Main */}
+        <div className="flex-1 flex flex-col lg:flex-row">
+
+          {/* Left: join info */}
+          <div className="flex flex-col items-center justify-center gap-6 p-8 lg:w-2/5 lg:border-r border-white/10">
+            <p className="text-purple-300 text-xs font-bold uppercase tracking-[0.2em]">Código de sala</p>
+            <div className="bg-white rounded-3xl px-10 py-5 shadow-2xl">
+              <span className="text-kahoot-purple font-black tracking-[0.15em]" style={{fontSize:'clamp(2.5rem,8vw,5rem)'}}>
+                {roomCode}
+              </span>
             </div>
-          )}
+
+            <div className="flex items-center gap-5 bg-white/5 border border-white/10 rounded-2xl p-4">
+              <div className="bg-white p-2 rounded-xl shadow-lg shrink-0">
+                <QRCodeSVG
+                  value={`${window.location.origin}/join?code=${roomCode}`}
+                  size={110}
+                  bgColor="#ffffff"
+                  fgColor="#1a0533"
+                />
+              </div>
+              <div>
+                <p className="text-white font-bold text-sm mb-1">Escaneá el QR</p>
+                <p className="text-purple-300 text-xs mb-2">o abrí en el celular:</p>
+                <p className="text-yellow-300 font-bold text-xs leading-relaxed">fedehoot-production.up.railway.app/join</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: player list */}
+          <div className="flex-1 flex flex-col p-8 border-t lg:border-t-0 border-white/10">
+            <p className="text-purple-300 text-xs font-bold uppercase tracking-[0.2em] mb-4">
+              Jugadores unidos — {players.length}
+            </p>
+            {players.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 text-purple-400">
+                <div className="text-5xl opacity-30">👥</div>
+                <p className="font-semibold">Esperando jugadores...</p>
+                <p className="text-xs">Compartí el código o el QR</p>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2 content-start">
+                {players.map((p, i) => (
+                  <div
+                    key={p.nickname}
+                    className="flex items-center gap-2 rounded-full px-4 py-2 font-bold text-white text-sm shadow-lg"
+                    style={{backgroundColor: PLAYER_COLORS[i % PLAYER_COLORS.length] + 'cc'}}
+                  >
+                    <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-black">
+                      {p.nickname[0].toUpperCase()}
+                    </span>
+                    {p.nickname}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="text-center flex flex-col items-center gap-3">
-          <p className="text-purple-200 text-sm">{quizInfo?.title} · {quizInfo?.questionCount} preguntas</p>
+        {/* Bottom action bar */}
+        <div className="flex items-center justify-between gap-4 px-6 py-4 border-t border-white/10 bg-black/20">
+          <button
+            onClick={() => { socket.disconnect(); navigate('/quizzes'); }}
+            className="text-sm text-purple-400 hover:text-white transition-colors px-4 py-2"
+          >
+            ✕ Cancelar
+          </button>
           <button
             onClick={() => socket.emit('host:start-game')}
             disabled={players.length === 0}
-            className="bg-green-500 hover:bg-green-400 disabled:opacity-40 disabled:cursor-not-allowed font-black text-2xl px-12 py-5 rounded-2xl transition-colors shadow-xl"
+            className="bg-green-500 hover:bg-green-400 disabled:bg-white/10 disabled:text-white/30 disabled:cursor-not-allowed font-black text-xl px-14 py-4 rounded-2xl transition-colors shadow-xl"
           >
-            ¡Empezar!
+            {players.length === 0 ? 'Esperando jugadores...' : '¡Empezar juego!'}
           </button>
-          <button
-            onClick={() => { socket.disconnect(); navigate('/quizzes'); }}
-            className="text-sm text-purple-400 hover:text-purple-200 mt-1"
-          >
-            Cancelar sala
-          </button>
+          <span className="text-purple-400 text-sm text-right">{quizInfo?.questionCount} preg.</span>
         </div>
       </div>
     );
