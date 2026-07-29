@@ -29,6 +29,21 @@ if (existsSync(clientDist)) {
 
 setupSockets(io);
 
+// Delete guest (user_id IS NULL) quizzes older than 24h
+async function cleanupGuestQuizzes() {
+  const { supabase } = await import('./db.js');
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { error } = await supabase
+    .from('quizzes')
+    .delete()
+    .is('user_id', null)
+    .lt('created_at', cutoff);
+  if (error) console.error('Guest cleanup error:', error.message);
+  else console.log('Guest quiz cleanup ran');
+}
+cleanupGuestQuizzes();
+setInterval(cleanupGuestQuizzes, 24 * 60 * 60 * 1000);
+
 const PORT = process.env.PORT ?? 3001;
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Server on http://localhost:${PORT}`);

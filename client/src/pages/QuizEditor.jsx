@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth';
 import { useNavigate, useParams } from 'react-router-dom';
 import { randomUUID } from '../utils';
 
@@ -28,6 +29,14 @@ export default function QuizEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
+  const { getToken } = useAuth();
+
+  async function authFetch(url, opts = {}) {
+    const token = await getToken();
+    const headers = { ...(opts.headers ?? {}) };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return fetch(url, { ...opts, headers });
+  }
 
   const [title, setTitle] = useState('');
   const [questions, setQuestions] = useState([newQuestion()]);
@@ -36,7 +45,7 @@ export default function QuizEditor() {
 
   useEffect(() => {
     if (!isEdit) return;
-    fetch(`/api/quizzes/${id}/edit`)
+    authFetch(`/api/quizzes/${id}/edit`)
       .then(r => r.json())
       .then(quiz => {
         setTitle(quiz.title);
@@ -143,7 +152,7 @@ export default function QuizEditor() {
 
     const url = isEdit ? `/api/quizzes/${id}` : '/api/quizzes';
     const method = isEdit ? 'PUT' : 'POST';
-    const res = await fetch(url, {
+    const res = await authFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -159,7 +168,7 @@ export default function QuizEditor() {
   }
 
   async function exportQuiz() {
-    const quiz = await fetch(`/api/quizzes/${id}/edit`).then(r => r.json());
+    const quiz = await authFetch(`/api/quizzes/${id}/edit`).then(r => r.json());
     const payload = [{
       title: quiz.title,
       questions: quiz.questions.map(q => ({
