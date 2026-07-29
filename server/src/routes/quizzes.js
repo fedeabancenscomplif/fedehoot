@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
     query = query.is('user_id', null);
   }
   const { data, error } = await query;
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(500).json({ error: 'Error interno' });
   res.json(data);
 });
 
@@ -72,7 +72,7 @@ router.post('/import', async (req, res) => {
       count++;
     }
   } catch (e) {
-    return res.status(400).json({ error: 'Formato inválido: ' + e.message });
+    return res.status(400).json({ error: 'Formato inválido' });
   }
   res.json({ imported: count });
 });
@@ -106,7 +106,7 @@ router.post('/', async (req, res) => {
     title: title.trim(),
     user_id: user?.id ?? null,
   });
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(500).json({ error: 'Error interno' });
   await saveQuestions(quizId, questions);
   res.status(201).json({ id: quizId });
 });
@@ -118,7 +118,8 @@ router.put('/:id', async (req, res) => {
   if (existing.user_id !== null && existing.user_id !== user?.id) {
     return res.status(403).json({ error: 'No autorizado' });
   }
-  const { title, questions = [] } = req.body;
+  const { title, questions: rawQuestions = [] } = req.body;
+  const questions = rawQuestions.slice(0, 50);
   if (title?.trim()) {
     await supabase.from('quizzes').update({ title: title.trim() }).eq('id', req.params.id);
   }
@@ -167,7 +168,7 @@ async function saveQuestions(quizId, questions) {
       order_index: i,
     });
     if (error) throw error;
-    const answersToInsert = (q.answers ?? []).map((a, j) => ({
+    const answersToInsert = (q.answers ?? []).slice(0, 8).map((a, j) => ({
       id: randomUUID(),
       question_id: qId,
       text: a.text,
