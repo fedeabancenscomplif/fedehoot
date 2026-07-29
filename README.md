@@ -1,6 +1,6 @@
 # FedeHoot!
 
-Clon de Kahoot self-hosteable para jugar trivia en tiempo real con amigos en la misma red o en internet.
+Clon de Kahoot self-hosteable para jugar trivia en tiempo real con amigos.
 
 ## Features
 
@@ -11,7 +11,8 @@ Clon de Kahoot self-hosteable para jugar trivia en tiempo real con amigos en la 
 - Sincronización en tiempo real via WebSockets
 - Puntuación basada en velocidad: máximo 1000 puntos por pregunta, decrece con el tiempo
 - Leaderboard entre preguntas y podio final
-- Funciona desde el celular en la misma red WiFi o por internet via Railway
+- **Login con Google** — quizzes privados y permanentes
+- **Modo invitado** — sin login, quizzes se borran automáticamente después de 24h
 
 
 ## Tipos de pregunta
@@ -20,29 +21,29 @@ Clon de Kahoot self-hosteable para jugar trivia en tiempo real con amigos en la 
 |---|---|---|
 | **Una correcta** | Una sola respuesta es correcta | Toca una de las 4 opciones de color |
 | **Varias correctas** | Múltiples respuestas pueden ser correctas | Toca todas las que crea correctas y presiona "Confirmar". Requiere seleccionar exactamente las correctas para puntuar |
-| **Ordenar** | Los elementos deben ordenarse de cierta forma (ej: de mayor a menor precio) | Toca los elementos en el orden correcto. Al ubicar todos, se envía automáticamente. Puntuación parcial por posiciones acertadas |
+| **Ordenar** | Los elementos deben ordenarse de cierta forma | Toca los elementos en el orden correcto. Al ubicar todos, se envía automáticamente. Puntuación parcial por posiciones acertadas |
 
 ## Imágenes en preguntas
 
-En el editor de cada pregunta hay un campo opcional de URL de imagen. Pegá la dirección de cualquier imagen pública (clic derecho sobre una imagen en el browser → *Copiar dirección de imagen*) y aparece un preview en vivo. Durante el juego la imagen se muestra arriba del texto de la pregunta tanto en la pantalla del host como en el celular del jugador.
-
-> Las imágenes son opcionales — preguntas sin imagen se ven igual que siempre.
+En el editor hay un campo opcional de URL de imagen. Pegá la dirección de cualquier imagen pública (clic derecho → *Copiar dirección de imagen*) y aparece un preview en vivo. Durante el juego la imagen se muestra arriba del texto tanto en la pantalla del host como en el celular del jugador.
 
 ## QR code para unirse
 
-En la sala de espera el host ve un QR code que los jugadores pueden escanear con la cámara del celular. El QR lleva directo a la pantalla de unirse con el código de sala ya precargado — solo falta escribir el nombre.
+En la sala de espera el host ve un QR que los jugadores pueden escanear. El QR lleva directo a la pantalla de unirse con el código ya precargado.
 
 ## Stack
 
 | Capa | Tecnología |
 |---|---|
-| Servidor | Node.js + Express + Socket.io |
-| Base de datos | SQLite via `node:sqlite` (built-in Node 22+, sin dependencias nativas) |
+| Servidor | Node.js 24 + Express + Socket.io |
+| Base de datos | Supabase (Postgres) |
+| Auth | Supabase Auth — Google OAuth |
 | Cliente | React 18 + Vite + Tailwind CSS |
 
-## Requisitos
+## Requisitos (desarrollo local)
 
 - Node.js 22 o superior
+- Una cuenta en [supabase.com](https://supabase.com) con un proyecto creado
 
 ## Instalación
 
@@ -50,10 +51,30 @@ En la sala de espera el host ve un QR code que los jugadores pueden escanear con
 git clone <repo-url>
 cd fedehoot
 
-# Instalar dependencias de server y client
 npm install --prefix server
 npm install --prefix client
 ```
+
+Crear `server/.env` con las credenciales del proyecto Supabase:
+
+```env
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_ANON_KEY=<anon key>
+SUPABASE_SERVICE_ROLE_KEY=<service role key>
+```
+
+Crear `client/.env.local` con las mismas credenciales (prefijo `VITE_` para que Vite las exponga al browser):
+
+```env
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon key>
+```
+
+Las credenciales se encuentran en **Supabase Dashboard → Settings → API**.
+
+## Base de datos
+
+Las migraciones están en `supabase/migrations/`. Para aplicarlas manualmente, correr cada archivo en **Supabase Dashboard → SQL Editor**, o usar la [CLI de Supabase](https://supabase.com/docs/reference/cli).
 
 ## Correr en local
 
@@ -67,45 +88,41 @@ cd client && npm run dev
 
 Abrir `http://localhost:5173` en el browser.
 
-### Jugar desde el celular (misma red WiFi)
-
-Desde el celu entrar a `http://<IP-de-tu-Mac>:5173`.
-
-Para ver tu IP local:
-```bash
-ipconfig getifaddr en0
-```
-
 ## Estructura del proyecto
 
 ```
 fedehoot/
+├── supabase/
+│   └── migrations/          # Migraciones SQL
 ├── server/
 │   └── src/
-│       ├── index.js          # Express + Socket.io
-│       ├── db.js             # SQLite setup
+│       ├── index.js          # Express + Socket.io + guest cleanup
+│       ├── db.js             # Supabase client + getUserFromRequest
 │       ├── game/
 │       │   └── GameRoom.js   # Máquina de estados del juego
 │       ├── routes/
-│       │   └── quizzes.js    # REST API (CRUD quizzes)
+│       │   └── quizzes.js    # REST API con ownership checks
 │       └── sockets/
 │           └── index.js      # Handlers de WebSocket
 └── client/
     └── src/
+        ├── hooks/
+        │   └── useAuth.js      # Google OAuth hook
         ├── pages/
-        │   ├── Home.jsx        # Landing
-        │   ├── QuizList.jsx    # Lista de quizzes
-        │   ├── QuizEditor.jsx  # Crear/editar quiz
-        │   ├── HostGame.jsx    # Vista del host
-        │   ├── JoinGame.jsx    # Unirse con código
-        │   └── PlayGame.jsx    # Vista del jugador
-        └── socket.js           # Singleton Socket.io client
+        │   ├── Home.jsx
+        │   ├── QuizList.jsx    # Lista de quizzes + login/logout
+        │   ├── QuizEditor.jsx
+        │   ├── HostGame.jsx
+        │   ├── JoinGame.jsx
+        │   └── PlayGame.jsx
+        ├── supabase.js         # Supabase client (browser)
+        └── socket.js
 ```
 
 ## Flujo del juego
 
 ```
-Host crea sala → jugadores se unen con código
+Host crea sala → jugadores se unen con código o QR
     → host apreta Empezar
         → pregunta + timer
             → jugadores responden (o se acaba el tiempo)
@@ -116,13 +133,18 @@ Host crea sala → jugadores se unen con código
 
 ## API REST
 
+Todos los endpoints de escritura requieren header `Authorization: Bearer <token>` cuando el usuario está logueado. Sin token, los quizzes se crean como invitado.
+
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/quizzes` | Listar quizzes |
-| GET | `/api/quizzes/:id` | Obtener quiz con preguntas |
+| GET | `/api/quizzes` | Listar quizzes del usuario (o invitados si no hay token) |
+| GET | `/api/quizzes/:id` | Obtener quiz con preguntas (sin revelar respuestas) |
+| GET | `/api/quizzes/:id/edit` | Obtener quiz con respuestas (para el editor) |
 | POST | `/api/quizzes` | Crear quiz |
 | PUT | `/api/quizzes/:id` | Actualizar quiz |
 | DELETE | `/api/quizzes/:id` | Eliminar quiz |
+| GET | `/api/quizzes/export` | Exportar todos los quizzes como JSON |
+| POST | `/api/quizzes/import` | Importar quizzes desde JSON |
 
 ## Eventos WebSocket
 
@@ -150,41 +172,37 @@ Host crea sala → jugadores se unen con código
 | `game:finished` | Fin del juego + leaderboard final |
 | `game:error` | Error (sala no encontrada, host desconectado, etc.) |
 
-## Deploy
+## Deploy (Railway + Supabase + Google OAuth)
 
-### Preparar para producción
+### 1. Supabase
 
-Antes de deployar, hacer el build del cliente y configurar Express para servir los archivos estáticos:
+1. Crear proyecto en [supabase.com](https://supabase.com)
+2. Aplicar las migraciones de `supabase/migrations/` en el SQL Editor
+3. Activar Google OAuth: **Authentication → Providers → Google**
+   - Crear credenciales en [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials → OAuth 2.0 Client ID
+   - Authorized redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`
+   - Pegar Client ID y Client Secret en Supabase
+4. Configurar URLs: **Authentication → URL Configuration**
+   - Site URL: `https://<tu-app>.up.railway.app`
+   - Redirect URLs: `https://<tu-app>.up.railway.app/**`
 
-```bash
-cd client && npm run build
-```
+### 2. Railway
 
-Agregar en `server/src/index.js` antes del `httpServer.listen`:
-```js
-import { join } from 'path';
-app.use(express.static(join(__dirname, '../../client/dist')));
-app.get('*', (req, res) =>
-  res.sendFile(join(__dirname, '../../client/dist/index.html'))
-);
-```
+1. Conectar el repo de GitHub en [railway.app](https://railway.app)
+2. Configurar estas variables de entorno:
 
-### Railway
+| Variable | Valor |
+|---|---|
+| `SUPABASE_URL` | `https://<project-ref>.supabase.co` (sin trailing slash) |
+| `SUPABASE_ANON_KEY` | anon key del proyecto |
+| `SUPABASE_SERVICE_ROLE_KEY` | service role key del proyecto |
+| `VITE_SUPABASE_URL` | igual que `SUPABASE_URL` |
+| `VITE_SUPABASE_ANON_KEY` | igual que `SUPABASE_ANON_KEY` |
 
-1. Hacer push del repo a GitHub
-2. Entrar a [railway.app](https://railway.app) → New Project → Deploy from GitHub
-3. Configurar variable de entorno: `PORT=3001`
-4. Railway detecta Node.js automáticamente
+> **Nota:** `SUPABASE_URL` debe ser solo la URL base, sin `/rest/v1` ni trailing slash.
 
-Plan Hobby ($5/mes, incluye $5 de créditos — para uso ocasional suele alcanzar).
+Railway buildea y despliega automáticamente en cada push a `main`.
 
-### Fly.io
+### 3. Google Cloud Console
 
-```bash
-brew install flyctl
-flyctl auth login
-flyctl launch
-flyctl volumes create data --size 1  # para persistir el SQLite
-```
-
-Tiene un free tier genuino (3 VMs compartidas).
+En **OAuth consent screen**, configurar el nombre de la app para que aparezca "FedeHoot" en la pantalla de login de Google en vez del ID del proyecto.
