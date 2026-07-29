@@ -141,7 +141,6 @@ export default function QuizList() {
         </div>
       )}
 
-      {(loading || user === undefined) && <p className="text-purple-200">Cargando...</p>}
 
       {!loading && user !== undefined && quizzes.length === 0 && (
         <div className="text-center py-16 text-purple-200">
