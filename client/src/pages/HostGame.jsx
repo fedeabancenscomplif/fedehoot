@@ -134,10 +134,10 @@ export default function HostGame() {
   if (phase === 'lobby') {
     const PLAYER_COLORS = ['#E21B3C','#1368CE','#D89E00','#26890C','#9B59B6','#E67E22','#1ABC9C','#E91E8C'];
     return (
-      <div className="min-h-screen flex flex-col" style={{background:'linear-gradient(160deg,#1a0533 0%,#2e0b5e 60%,#1a0533 100%)'}}>
+      <div className="min-h-screen flex flex-col">
 
         {/* Top bar */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-white/10">
+        <div className="flex items-center justify-between px-6 py-3 border-b border-white/10 bg-black/20">
           <div className="flex items-center gap-3">
             <span className="text-white font-black text-lg tracking-tight">FedeHoot!</span>
             <span className="text-purple-400 text-sm">·</span>
