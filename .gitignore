@@ -3,3 +3,4 @@ server/data/
 client/dist/
 .env
 *.local
+data/
