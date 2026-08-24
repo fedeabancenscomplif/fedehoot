@@ -1,6 +1,8 @@
-# 02 · Autenticación con Supabase + Google
+# Etapa 2 · Autenticación con Supabase + Google
 
-Continuamos con el proyecto `kahoot-clone/`. Ya tenemos el setup base del cliente y el servidor del paso anterior.
+> **Este paso es independiente del flujo principal.** Se puede hacer después de terminar los pasos 01–05. Agrega login con Google para que solo el dueño de cada quiz pueda editarlo.
+
+Continuamos con el proyecto `kahoot-clone/`. Ya tenemos el CRUD de quizzes y la partida funcionando.
 
 ## Qué vamos a hacer
 

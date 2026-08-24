@@ -12,7 +12,7 @@ Creá la página `/results/:code` (o mostrala como estado dentro de las pantalla
 - Podio con los 3 primeros (con nombre y puntaje)
 - Lista completa del ranking con posición, nickname y puntos totales
 - El jugador actual resaltado en su propia posición
-- Botón "Volver al inicio" (jugador) y "Volver a mis quizzes" (host)
+- Botón "Volver al inicio" tanto para el jugador como para el host
 
 **Detalles visuales sugeridos:**
 - 1er lugar: ícono de trofeo o corona, color dorado

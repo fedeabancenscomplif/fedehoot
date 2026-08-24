@@ -98,6 +98,6 @@ En la página `/` (inicio público), el campo de código de sala ya existe. Agre
 ## Verificación
 
 Al terminar:
-1. Host inicia sesión → entra a su quiz → "Iniciar partida" → ve el código
+1. Host entra a su quiz en `/quizzes/:id` → presiona "Iniciar partida" → ve el código
 2. Jugador abre otra pestaña (o celular) → ingresa el código y un nickname → aparece en la lista del host
 3. Si entra un segundo jugador, la lista se actualiza en tiempo real en todos los dispositivos
