@@ -1,5 +1,8 @@
 {
   "buildCommand": "npm install --prefix client && npm run build --prefix client",
   "outputDirectory": "client/dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://fedehoot-production.up.railway.app/api/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
