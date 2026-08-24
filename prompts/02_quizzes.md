@@ -1,109 +1,37 @@
-# 02 · CRUD de Quizzes
+# 02 · Crear y editar quizzes
 
-Continuamos con `kahoot-clone/`. Ya tenemos el setup base del cliente y el servidor del paso anterior.
+El host necesita poder armar sus quizzes antes de la clase: escribir preguntas, cargar las opciones de respuesta y marcar cuál es la correcta.
 
-## Qué vamos a hacer
+Por ahora no hay login: cualquiera que acceda a la app puede ver y editar todos los quizzes. Eso lo resolvemos en la Etapa 2.
 
-Permitir crear, editar y eliminar quizzes con sus preguntas y opciones de respuesta. Por ahora no hay login: cualquiera puede ver y editar todos los quizzes.
+## Lo que tiene que quedar funcionando
 
-## Estructura de datos en Supabase
+### Panel de quizzes (`/quizzes`)
 
-Creá las siguientes tablas en el **SQL Editor** de Supabase:
+El host ve una lista de todos sus quizzes con el nombre y la fecha en que los creó. Desde acá puede:
 
-```sql
-create table quizzes (
-  id uuid primary key default gen_random_uuid(),
-  title text not null,
-  created_at timestamptz default now()
-);
+- **Crear un quiz nuevo**: escribe el título y se agrega a la lista.
+- **Editar un quiz**: lo lleva al editor.
+- **Eliminar un quiz**: le pide confirmación antes de borrarlo.
 
-create table questions (
-  id uuid primary key default gen_random_uuid(),
-  quiz_id uuid references quizzes(id) on delete cascade,
-  text text not null,
-  time_limit integer default 20,
-  position integer not null
-);
+### Editor de quiz (`/quizzes/:id`)
 
-create table answers (
-  id uuid primary key default gen_random_uuid(),
-  question_id uuid references questions(id) on delete cascade,
-  text text not null,
-  is_correct boolean default false
-);
-```
+El host puede cambiar el título del quiz y gestionar sus preguntas. Cada pregunta tiene:
 
-Para que el servidor pueda leer y escribir sin restricciones, deshabilitá RLS o usá la **service role key**. Guardala en `server/.env`:
+- Un enunciado (el texto de la pregunta)
+- Cuatro opciones de respuesta
+- Una respuesta marcada como correcta
+- Un tiempo límite en segundos (por defecto, 20)
 
-```
-SUPABASE_URL=https://tu-proyecto.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
-```
+El host puede agregar preguntas nuevas, reordenarlas, editar cualquier campo y eliminar las que no quiera. Al presionar "Guardar", todo queda persistido.
 
-## Lo que necesito en `server/`
+### Persistencia
 
-Instalá el cliente de Supabase:
-
-```bash
-npm install @supabase/supabase-js dotenv
-```
-
-Inicializá el cliente en `server/src/supabase.js` usando las variables de entorno.
-
-Creá los siguientes endpoints en Express:
-
-```
-GET    /api/quizzes              → lista todos los quizzes
-POST   /api/quizzes              → crea un quiz (body: { title })
-GET    /api/quizzes/:id          → trae un quiz con sus preguntas y respuestas
-PUT    /api/quizzes/:id          → actualiza el título
-DELETE /api/quizzes/:id          → elimina el quiz
-
-POST   /api/quizzes/:id/questions       → agrega una pregunta
-PUT    /api/quizzes/:id/questions/:qid  → actualiza una pregunta y sus respuestas
-DELETE /api/quizzes/:id/questions/:qid → elimina una pregunta
-```
-
-El endpoint `GET /api/quizzes/:id` debe devolver el quiz junto con sus preguntas ordenadas por `position`, y cada pregunta con sus respuestas.
-
-## Lo que necesito en `client/`
-
-Instalá axios o usá `fetch` nativo para las llamadas a la API.
-
-En `client/.env`:
-
-```
-VITE_API_URL=http://localhost:3001
-```
-
-### Página `/quizzes`
-
-- Lista de todos los quizzes con título y fecha de creación
-- Botón "Nuevo quiz" que abre un formulario inline o modal para escribir el título
-- Botón "Editar" por quiz que lleva a `/quizzes/:id`
-- Botón "Eliminar" con confirmación
-
-### Página `/quizzes/:id` (editor)
-
-- Campo para editar el título del quiz
-- Lista de preguntas en orden
-- Por cada pregunta:
-  - Campo de texto para el enunciado
-  - Cuatro opciones de respuesta (inputs de texto)
-  - Selector para marcar cuál es la correcta (radio o checkbox)
-  - Campo numérico para el tiempo límite en segundos (por defecto 20)
-  - Botón para eliminar la pregunta
-- Botón "Agregar pregunta" al final de la lista
-- Botón "Guardar" que persiste todos los cambios
-
-### Navegación
-
-Agregá un link a `/quizzes` en la página principal (`/`) para poder acceder al panel de quizzes.
+Los quizzes se guardan en **Supabase**. Necesitás crear las tablas `quizzes`, `questions` y `answers` en el SQL Editor. El servidor se conecta a Supabase con la service role key para leer y escribir sin restricciones.
 
 ## Verificación
 
-Al terminar:
-1. Crear un quiz desde `/quizzes`
-2. Editarlo: agregar 2-3 preguntas con sus opciones y respuesta correcta marcada
-3. Guardar y recargar la página → los datos persisten en Supabase
-4. Eliminar el quiz → desaparece de la lista
+1. El host crea un quiz, le agrega 3 preguntas con sus opciones y respuestas correctas, y guarda.
+2. Recarga la página y todo sigue ahí.
+3. Edita una pregunta y guarda de nuevo — el cambio persiste.
+4. Elimina el quiz — desaparece de la lista.
