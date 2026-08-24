@@ -10,13 +10,15 @@ import { setupSockets } from './sockets/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+const ALLOWED_ORIGIN = process.env.CLIENT_ORIGIN ?? 'http://localhost:5173';
+
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: { origin: '*', methods: ['GET', 'POST'] },
+  cors: { origin: ALLOWED_ORIGIN, methods: ['GET', 'POST'] },
 });
 
-app.use(cors({ origin: '*' }));
+app.use(cors({ origin: ALLOWED_ORIGIN }));
 app.use(express.json());
 app.use('/api/quizzes', quizzesRouter);
 
