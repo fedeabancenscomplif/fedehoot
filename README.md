@@ -35,10 +35,12 @@ En la sala de espera el host ve un QR que los jugadores pueden escanear. El QR l
 
 | Capa | Tecnología |
 |---|---|
-| Servidor | Node.js 24 + Express + Socket.io |
+| Cliente | React 18 + Vite + Tailwind CSS |
+| Servidor | Node.js + Express + Socket.io |
 | Base de datos | Supabase (Postgres) |
 | Auth | Supabase Auth — Google OAuth |
-| Cliente | React 18 + Vite + Tailwind CSS |
+| Hosting frontend | Vercel — CDN global, deploy automático en cada push a `main` |
+| Hosting backend | Railway — proceso persistente (necesario para WebSockets) |
 
 ## Requisitos (desarrollo local)
 
@@ -172,7 +174,9 @@ Todos los endpoints de escritura requieren header `Authorization: Bearer <token>
 | `game:finished` | Fin del juego + leaderboard final |
 | `game:error` | Error (sala no encontrada, host desconectado, etc.) |
 
-## Deploy (Railway + Supabase + Google OAuth)
+## Deploy (Vercel + Railway + Supabase)
+
+El frontend vive en Vercel y el backend en Railway. Ambos hacen deploy automático en cada push a `main`. Las llamadas a `/api/*` que llegan a Vercel se redirigen al backend de Railway via proxy (configurado en `vercel.json`).
 
 ### 1. Supabase
 
@@ -183,26 +187,36 @@ Todos los endpoints de escritura requieren header `Authorization: Bearer <token>
    - Authorized redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`
    - Pegar Client ID y Client Secret en Supabase
 4. Configurar URLs: **Authentication → URL Configuration**
-   - Site URL: `https://<tu-app>.up.railway.app`
-   - Redirect URLs: `https://<tu-app>.up.railway.app/**`
+   - Site URL: `https://<tu-app>.vercel.app`
+   - Redirect URLs: `https://<tu-app>.vercel.app/**`
 
-### 2. Railway
+### 2. Vercel (frontend)
+
+1. Conectar el repo de GitHub en [vercel.com](https://vercel.com)
+2. Vercel detecta el `vercel.json` automáticamente — no hace falta configurar build ni output directory
+3. Agregar estas variables de entorno en Vercel → Settings → Environment Variables:
+
+| Variable | Valor |
+|---|---|
+| `VITE_SUPABASE_URL` | `https://<project-ref>.supabase.co` (sin trailing slash) |
+| `VITE_SUPABASE_ANON_KEY` | anon key del proyecto |
+
+> **Importante:** las variables con prefijo `VITE_` son de build time. Después de agregarlas hay que hacer un redeploy para que tomen efecto.
+
+### 3. Railway (backend)
 
 1. Conectar el repo de GitHub en [railway.app](https://railway.app)
-2. Configurar estas variables de entorno:
+2. Railway usa el `railway.json` del repo para buildear y arrancar solo el servidor
+3. Agregar estas variables de entorno:
 
 | Variable | Valor |
 |---|---|
 | `SUPABASE_URL` | `https://<project-ref>.supabase.co` (sin trailing slash) |
 | `SUPABASE_ANON_KEY` | anon key del proyecto |
 | `SUPABASE_SERVICE_ROLE_KEY` | service role key del proyecto |
-| `VITE_SUPABASE_URL` | igual que `SUPABASE_URL` |
-| `VITE_SUPABASE_ANON_KEY` | igual que `SUPABASE_ANON_KEY` |
 
-> **Nota:** `SUPABASE_URL` debe ser solo la URL base, sin `/rest/v1` ni trailing slash.
+4. Copiar la URL pública del servicio en Railway (ej: `https://fedehoot-production.up.railway.app`) y pegarla en el `vercel.json` como destino del proxy de `/api/*`.
 
-Railway buildea y despliega automáticamente en cada push a `main`.
-
-### 3. Google Cloud Console
+### 4. Google Cloud Console
 
 En **OAuth consent screen**, configurar el nombre de la app para que aparezca "FedeHoot" en la pantalla de login de Google en vez del ID del proyecto.
