@@ -1,65 +1,44 @@
-# 06 · Leaderboard y pulido final
+# 05 · Resultados y pulido
 
-Continuamos con `kahoot-clone/`. Ya tenemos la partida completa funcionando. Este es el paso final: la pantalla de resultados y algunos detalles de UX que hacen que la app se sienta terminada.
+Pantalla de resultados al finalizar la partida y mejoras de experiencia que hacen que todo se sienta más como un producto terminado.
 
-## Lo que necesito en `client/`
+## Pantalla de resultados finales
 
-### Pantalla de leaderboard final
+Cuando termina la última pregunta, todos los participantes ven el leaderboard final.
 
-Creá la página `/results/:code` (o mostrala como estado dentro de las pantallas de host/jugador al recibir `game_end`).
+**Para el jugador:** su posición en el ranking, cuántos puntos hizo y quién ganó. Si quedó primero, que se note.
 
-**Para el host y el jugador — mostrar:**
-- Podio con los 3 primeros (con nombre y puntaje)
-- Lista completa del ranking con posición, nickname y puntos totales
-- El jugador actual resaltado en su propia posición
-- Botón "Volver al inicio" tanto para el jugador como para el host
+**Para el host:** el ranking completo con nombres y puntajes. Un botón para volver al panel de quizzes y poder arrancar otra partida.
 
-**Detalles visuales sugeridos:**
-- 1er lugar: ícono de trofeo o corona, color dorado
-- 2do y 3er: colores plata y bronce
-- Animación de entrada de los nombres (podés hacerlo con CSS)
+El podio (1°, 2°, 3°) tiene que estar visualmente diferenciado — no hace falta que sea elaborado, pero tiene que ser fácil identificar al ganador de un vistazo.
 
-### Mejoras de UX durante la partida
+## Mejoras de UX durante la partida
 
-Ahora que el flujo funciona, pulí estos detalles:
+Estos detalles hacen la diferencia entre una demo y algo que se siente terminado:
 
-**Cuenta regresiva visual:**
-- La barra de tiempo del jugador y del host deben decrementar suavemente (con CSS `transition` o `requestAnimationFrame`)
-- Cuando queden 5 segundos, la barra cambia de color (verde → rojo)
+**Barra de tiempo con feedback visual:** cambia de color (por ejemplo, verde → amarillo → rojo) a medida que se acaba el tiempo. Que el cambio sea suave, no abrupto.
 
-**Feedback al responder:**
-- Al presionar una opción, el botón seleccionado se ilumina
-- Los demás botones se atenúan
-- Si el tiempo se acaba sin responder, mostrar "¡Tiempo!" y deshabilitar los botones
+**Feedback al responder:** cuando el jugador toca una opción, el botón seleccionado se ilumina y los demás se atenúan. Deja claro que la respuesta fue registrada.
 
-**Pantalla de espera entre preguntas:**
-- Entre `question_end` y el próximo `question_start`, mostrar una pantalla de transición con el ranking actual (top 3) durante 3-4 segundos antes de que el host avance manualmente
+**Si el tiempo se acaba sin responder:** aparece un mensaje del tipo "¡Tiempo!" y los botones quedan deshabilitados.
 
-**Manejo de desconexión:**
-- Si el host se desconecta, emitir `host_disconnected` a todos los jugadores y mostrar "El host abandonó la partida"
-- Si un jugador se desconecta durante la partida, el servidor lo marca como inactivo pero la partida continúa
-
-### Pantalla de error / sala no encontrada
-
-Si un jugador intenta unirse con un código que no existe o que ya terminó, mostrar una pantalla amigable de error en lugar de quedarse colgado.
+**Transición entre preguntas:** después de mostrar el resultado de cada ronda, hay una pausa de 3-4 segundos con el ranking parcial antes de que el host pueda avanzar. Evita que la partida se sienta apresurada.
 
 ## Ideas opcionales (si queda tiempo)
 
-Estos no son requisitos, pero hacen el demo más divertido:
+Estas no son requisitos, pero hacen el demo más divertido:
 
-- **QR code en la pantalla del host**: para que los jugadores scaneen y vayan directo a la URL de unión. Podés usar la librería `qrcode.react`.
-- **Sonidos**: un beep al cambiar de pregunta, un sonido de victoria al mostrar el leaderboard.
-- **Confetti** al mostrar el ganador: librería `canvas-confetti`.
-- **Modo oscuro**: toggle en la esquina superior que cambie el theme de la app.
+- **QR code** en la pantalla del host con el link directo para unirse, en vez de tener que tipear el código a mano.
+- **Confetti** cuando aparece el ganador.
+- **Modo oscuro** con un toggle en algún lugar de la app.
 
 ## Verificación final
 
-Al terminar, el flujo completo debería funcionar sin interrupciones:
+Flujo completo de punta a punta:
 
-1. Host se loguea con Google
-2. Crea un quiz con 3 preguntas y sus opciones
-3. Inicia una partida → ve el código
-4. 2-3 jugadores se unen desde distintas pestañas
-5. Host comienza → todos ven las preguntas en tiempo real
-6. Al terminar → leaderboard con el ganador resaltado
-7. Todos vuelven al inicio sin errores
+1. El host crea un quiz con 3 preguntas.
+2. Inicia la partida — aparece el código.
+3. Dos o tres jugadores se unen desde distintas pestañas o dispositivos.
+4. Juegan las tres rondas.
+5. Al terminar, todos ven el leaderboard con el ganador resaltado.
+6. El host puede volver y arrancar otra partida.

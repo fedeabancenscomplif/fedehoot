@@ -1,17 +1,17 @@
 # 01 · Setup del proyecto
 
-Vamos a construir **Fedehoot**, un clon de Kahoot: una app web de quizzes en tiempo real.
+Vamos a construir **Fedehoot**, un clon de Kahoot: una app web de quizzes en tiempo real donde un host crea preguntas y los jugadores responden desde sus celulares, compitiendo por el puntaje más alto.
 
 ## Stack
 
 - **Frontend**: React + Vite + TailwindCSS
 - **Backend**: Node.js + Express
-- **Tiempo real**: Socket.IO (lo vamos a usar más adelante)
-- **Base de datos**: Supabase (PostgreSQL)
+- **Base de datos**: Supabase (PostgreSQL hosteado)
+- **Tiempo real**: Socket.IO (lo agregamos en pasos posteriores)
 
-## Lo que necesito que armes en este paso
+## Lo que tiene que quedar funcionando
 
-Creá la estructura base del proyecto con dos carpetas separadas dentro de una carpeta raíz llamada `kahoot-clone/`:
+Al terminar este paso, el proyecto tiene que tener esta estructura:
 
 ```
 kahoot-clone/
@@ -19,27 +19,10 @@ kahoot-clone/
   server/    ← servidor de Node
 ```
 
-### `client/`
+El **frontend** muestra una pantalla inicial con el título "Fedehoot" y dos opciones:
+- Un botón para ir al panel de quizzes (la vista del host)
+- Un campo para ingresar un código de sala (la vista del jugador — sin lógica por ahora)
 
-Inicializá un proyecto de React con Vite y TailwindCSS v3. Usá el template de React (no TypeScript). Configurá Tailwind correctamente con el archivo `tailwind.config.js` y los estilos globales en `index.css`.
+El **servidor** tiene que estar corriendo y responder a `GET /api/health` con `{ status: "ok" }`. Es la forma de saber que está vivo.
 
-La app debe tener una página inicial simple que muestre el título **"Fedehoot"** centrado en la pantalla.
-
-### `server/`
-
-Creá un servidor Express básico:
-
-- Escuchá en el puerto `3001` (o en `process.env.PORT` si existe)
-- Que tenga un endpoint `GET /api/health` que devuelva `{ status: "ok" }`
-- Instalá las dependencias: `express`, `cors`, `dotenv`
-
-### Archivos de configuración raíz
-
-- `.gitignore` que excluya `node_modules`, `.env`, `dist`
-- Un `README.md` mínimo con el nombre del proyecto
-
-## Verificación
-
-Al terminar, debería poder:
-1. Correr `npm run dev` dentro de `client/` y ver la pantalla con "Fedehoot"
-2. Correr `node src/index.js` dentro de `server/` y hacer `curl localhost:3001/api/health` y recibir `{ status: "ok" }`
+Ambas partes deben poder levantarse y conectarse sin errores en local.
