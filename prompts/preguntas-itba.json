@@ -1,6 +1,6 @@
 [
   {
-    "title": "Clase 1 · Sistema financiero y APIs",
+    "title": "Tecnología para las Finanzas · ITBA 81.76",
     "questions": [
       {
         "text": "El sistema financiero conecta ahorristas con quienes necesitan capital. ¿Cómo se llama esta función?",
@@ -109,12 +109,7 @@
           { "text": "Producción industrial", "is_correct": false },
           { "text": "Risk transfer", "is_correct": true }
         ]
-      }
-    ]
-  },
-  {
-    "title": "Clase 2 · Banca y medios de pago",
-    "questions": [
+      },
       {
         "text": "¿Cómo 'crea dinero' un banco en el sistema de reserva fraccionaria?",
         "time_limit": 20,
@@ -234,12 +229,7 @@
           { "text": "Venta de acciones en el mercado de capitales", "is_correct": false },
           { "text": "Redescuentos del banco central", "is_correct": true }
         ]
-      }
-    ]
-  },
-  {
-    "title": "Clase 3 · AI y LLMs",
-    "questions": [
+      },
       {
         "text": "¿Qué paper de 2017 introdujo la arquitectura Transformer?",
         "time_limit": 20,
@@ -347,12 +337,7 @@
           { "text": "Transformer", "is_correct": false },
           { "text": "Decision Trees", "is_correct": true }
         ]
-      }
-    ]
-  },
-  {
-    "title": "Clase 3 · Git",
-    "questions": [
+      },
       {
         "text": "¿Cuál es la diferencia entre Git y GitHub?",
         "time_limit": 20,
