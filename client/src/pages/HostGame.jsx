@@ -173,7 +173,7 @@ export default function HostGame() {
               <div>
                 <p className="text-white font-bold text-sm mb-1">Escaneá el QR</p>
                 <p className="text-purple-300 text-xs mb-2">o abrí en el celular:</p>
-                <p className="text-yellow-300 font-bold text-xs leading-relaxed">fedehoot-production.up.railway.app/join</p>
+                <p className="text-yellow-300 font-bold text-xs leading-relaxed">fedehoot.vercel.app/join</p>
               </div>
             </div>
           </div>
