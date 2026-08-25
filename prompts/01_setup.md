@@ -1,6 +1,6 @@
 # 01 · Setup del proyecto
 
-Vamos a construir **Fedehoot**, un clon de Kahoot: una app web de quizzes en tiempo real donde un host crea preguntas y los jugadores responden desde sus celulares, compitiendo por el puntaje más alto.
+Vamos a construir **Itbahoot**, un clon de Kahoot: una app web de quizzes en tiempo real donde un host crea preguntas y los jugadores responden desde sus celulares, compitiendo por el puntaje más alto.
 
 ## Stack
 
