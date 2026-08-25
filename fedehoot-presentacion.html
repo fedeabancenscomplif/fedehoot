@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fedehoot</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400&display=swap">
+
+<style>
+:root {
+  --bg:          #E8E5DF;
+  --surface:     #F3F1EC;
+  --surface-hi:  #FAFAF8;
+  --border:      #CCC9C2;
+  --border-sub:  #DDD9D3;
+  --text:        #1B1917;
+  --text-muted:  #706D68;
+  --text-faint:  #A09D98;
+  --accent:      #1A56DB;
+  --accent-warm: #C4380B;
+
+  --col-claude:   #D97706;
+  --col-github:   #374151;
+  --col-vercel:   #111827;
+  --col-railway:  #6D28D9;
+  --col-supabase: #1A9E6B;
+  --col-google:   #4285F4;
+
+  --r:  6px;
+  --rl: 12px;
+  --font-display: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-body:    'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:          #111110;
+    --surface:     #1B1917;
+    --surface-hi:  #232120;
+    --border:      #2E2C29;
+    --border-sub:  #242220;
+    --text:        #E4E0D8;
+    --text-muted:  #7A766F;
+    --text-faint:  #4A4844;
+    --accent:      #5B8EF5;
+    --accent-warm: #E0602B;
+    --col-github:  #9CA3AF;
+    --col-vercel:  #D1D5DB;
+    --col-google:  #699DF8;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page { max-width: 900px; margin: 0 auto; padding: 0 32px 120px; }
+
+.hero { padding: 80px 0 64px; border-bottom: 1px solid var(--border); }
+
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 28px;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(72px, 14vw, 116px);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  margin-bottom: 36px;
+}
+
+.hero-title .hot { color: var(--accent-warm); }
+
+.hero-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+
+.hero-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  background: var(--surface);
+  border: 1px solid var(--border-sub);
+  border-radius: 4px;
+  padding: 5px 10px;
+}
+
+.hero-desc {
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--text-muted);
+  max-width: 580px;
+  line-height: 1.6;
+}
+
+.section { padding: 64px 0; border-bottom: 1px solid var(--border-sub); }
+.section:last-child { border-bottom: none; }
+
+.section-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 16px;
+  text-wrap: balance;
+}
+
+.section-body {
+  font-size: 17px;
+  color: var(--text-muted);
+  max-width: 680px;
+  line-height: 1.75;
+}
+
+.flow { display: grid; grid-template-columns: repeat(5, 1fr); margin-top: 48px; }
+
+.flow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 10px;
+  position: relative;
+}
+
+.flow-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 21px;
+  left: 50%;
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+}
+
+.flow-dot {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--surface-hi);
+  border: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  position: relative;
+  z-index: 1;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.flow-step-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px; line-height: 1.3; }
+.flow-step-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+@media (max-width: 600px) {
+  .flow { grid-template-columns: 1fr; gap: 24px; }
+  .flow-step { flex-direction: row; text-align: left; align-items: flex-start; gap: 16px; padding: 0; }
+  .flow-step::after { display: none; }
+  .flow-dot { flex-shrink: 0; }
+  .flow-step-content { flex: 1; padding-top: 8px; }
+}
+
+.dev-flow {
+  margin-top: 44px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  overflow: hidden;
+}
+
+.dev-step { padding: 28px 22px; background: var(--surface-hi); border-right: 1px solid var(--border); }
+.dev-step:last-child { border-right: none; }
+
+.dev-num {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--border);
+  line-height: 1;
+  margin-bottom: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dev-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 6px; line-height: 1.35; }
+.dev-desc  { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+@media (max-width: 640px) {
+  .dev-flow { grid-template-columns: 1fr 1fr; }
+  .dev-step { border-top: 1px solid var(--border); }
+  .dev-step:nth-child(1), .dev-step:nth-child(2) { border-top: none; }
+  .dev-step:nth-child(2n) { border-right: none; }
+  .dev-step:last-child:nth-child(odd) { grid-column: span 2; border-right: none; }
+}
+
+.providers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 44px;
+}
+
+.provider-card {
+  background: var(--surface-hi);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--pc);
+  border-radius: var(--rl);
+  padding: 24px 24px 24px 26px;
+}
+
+.provider-header { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.provider-icon   { width: 28px; height: 28px; flex-shrink: 0; color: var(--pc); }
+.provider-icon svg { width: 100%; height: 100%; fill: currentColor; }
+
+.provider-name {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.provider-role {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pc);
+  margin-bottom: 14px;
+  display: block;
+  padding-left: 40px;
+}
+
+.provider-desc { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+
+.ws-note {
+  margin-top: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border-sub);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r);
+  padding: 20px 24px;
+  max-width: 700px;
+}
+
+.ws-note-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.ws-note-body { font-size: 14px; color: var(--text-muted); line-height: 1.75; }
+
+.infra-wrap {
+  margin-top: 44px;
+  background: var(--surface-hi);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  padding: 4px;
+  overflow-x: auto;
+}
+
+.infra-svg { width: 100%; height: auto; display: block; min-width: 640px; }
+
+.d-zone-deploy { fill: var(--bg);      stroke: var(--border-sub); stroke-width: 1; }
+.d-zone        { fill: var(--surface); stroke: var(--border-sub); stroke-width: 1; }
+.d-zone-label  { fill: var(--text-faint); font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.4px; }
+.d-node        { fill: var(--surface-hi); stroke: var(--border); stroke-width: 1; }
+.d-node-name   { fill: var(--text);       font-family: var(--font-display); font-size: 12px; font-weight: 700; }
+.d-node-sub    { fill: var(--text-muted); font-family: var(--font-mono); font-size: 9px; }
+.d-line        { stroke: var(--text-faint); stroke-width: 1.5; fill: none; }
+.d-line-ws     { stroke: var(--accent);     stroke-width: 1.5; stroke-dasharray: 5 2; fill: none; }
+.d-line-oauth  { stroke: var(--col-supabase); stroke-width: 1.5; stroke-dasharray: 4 3; fill: none; }
+.d-label       { fill: var(--text-faint);    font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.5px; }
+.d-label-ws    { fill: var(--accent);        font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.5px; }
+.d-label-oauth { fill: var(--col-supabase);  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.5px; }
+.d-mark        { fill: var(--text-faint); }
+.d-mark-ws     { fill: var(--accent); }
+.d-mark-oauth  { fill: var(--col-supabase); }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="hero">
+    <p class="hero-eyebrow">Tecnología para las Finanzas · 2026</p>
+    <h1 class="hero-title">FEDE<span class="hot">HOOT</span></h1>
+    <div class="hero-tags">
+      <span class="hero-tag">React + Vite</span>
+      <span class="hero-tag">Node.js + Socket.IO</span>
+      <span class="hero-tag">Supabase</span>
+      <span class="hero-tag">Vibe-coded con Claude</span>
+    </div>
+    <p class="hero-desc">Un clon de Kahoot construido con IA generativa y herramientas modernas de deployment — de cero a producción en una tarde.</p>
+  </header>
+
+  <section class="section">
+    <p class="section-eyebrow">El producto</p>
+    <h2 class="section-title">¿Qué es Fedehoot?</h2>
+    <p class="section-body">
+      Fedehoot es una aplicación web de quizzes en tiempo real. Un host crea un quiz con preguntas de opción múltiple o de ordenamiento, genera una sala con un código único, y los jugadores se unen desde cualquier dispositivo usando ese código y un nickname. La partida transcurre en sincronía: todos ven la misma pregunta al mismo tiempo, responden en segundos, y el leaderboard se actualiza en vivo después de cada ronda.
+    </p>
+  </section>
+
+  <section class="section">
+    <p class="section-eyebrow">Flujo del juego</p>
+    <h2 class="section-title">Cómo funciona una partida</h2>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-dot">1</div>
+        <div class="flow-step-content">
+          <div class="flow-step-title">Crear el quiz</div>
+          <div class="flow-step-desc">El host diseña preguntas y respuestas en el editor</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">2</div>
+        <div class="flow-step-content">
+          <div class="flow-step-title">Abrir sala</div>
+          <div class="flow-step-desc">Se genera un código único de 6 caracteres</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">3</div>
+        <div class="flow-step-content">
+          <div class="flow-step-title">Jugadores se unen</div>
+          <div class="flow-step-desc">Entran con el código y un nickname desde su celu</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">4</div>
+        <div class="flow-step-content">
+          <div class="flow-step-title">Rondas en vivo</div>
+          <div class="flow-step-desc">Pregunta → respuesta → resultados en tiempo real</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">5</div>
+        <div class="flow-step-content">
+          <div class="flow-step-title">Leaderboard final</div>
+          <div class="flow-step-desc">Ranking con puntajes acumulados al terminar</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <p class="section-eyebrow">Flujo de desarrollo</p>
+    <h2 class="section-title">De idea a producción</h2>
+    <div class="dev-flow">
+      <div class="dev-step">
+        <div class="dev-num">01</div>
+        <div class="dev-title">Prompt a Claude</div>
+        <div class="dev-desc">Se describe la feature en lenguaje natural. Claude genera el código.</div>
+      </div>
+      <div class="dev-step">
+        <div class="dev-num">02</div>
+        <div class="dev-title">Revisión local</div>
+        <div class="dev-desc">Se prueba en el entorno local y se refinan detalles con más prompts.</div>
+      </div>
+      <div class="dev-step">
+        <div class="dev-num">03</div>
+        <div class="dev-title">Push a GitHub</div>
+        <div class="dev-desc">Git commit + push. El repo queda como fuente de verdad.</div>
+      </div>
+      <div class="dev-step">
+        <div class="dev-num">04</div>
+        <div class="dev-title">Deploy automático</div>
+        <div class="dev-desc">Vercel y Railway detectan el push y despliegan en segundos, sin intervención manual.</div>
+      </div>
+      <div class="dev-step">
+        <div class="dev-num">05</div>
+        <div class="dev-title">En vivo</div>
+        <div class="dev-desc">La nueva versión queda disponible para todos los usuarios al instante.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <p class="section-eyebrow">Stack técnico</p>
+    <h2 class="section-title">Los proveedores</h2>
+    <div class="providers">
+
+      <div class="provider-card" style="--pc: var(--col-claude)">
+        <div class="provider-header">
+          <div class="provider-icon"><svg viewBox="0 0 24 24"><path d="M14.66 2H9.34L2 19h4.46l1.5-4.04h8.08L17.54 19H22L14.66 2zm-2.66 4.3 2.87 7.7H9.13L12 6.3z"/></svg></div>
+          <div class="provider-name">Claude · Anthropic</div>
+        </div>
+        <span class="provider-role">Vibe-coding · IA</span>
+        <div class="provider-desc">El asistente de IA con el que se escribió el 100% del código. El desarrollador describe en lenguaje natural; Claude genera, refactoriza y resuelve bugs.</div>
+      </div>
+
+      <div class="provider-card" style="--pc: var(--col-github)">
+        <div class="provider-header">
+          <div class="provider-icon"><svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></div>
+          <div class="provider-name">GitHub</div>
+        </div>
+        <span class="provider-role">Control de versiones</span>
+        <div class="provider-desc">Repositorio del proyecto y fuente de verdad del código. Cada push a <code style="font-family:'JetBrains Mono','Courier New',monospace;font-size:12px">main</code> dispara deploys automáticos en Vercel y Railway.</div>
+      </div>
+
+      <div class="provider-card" style="--pc: var(--col-vercel)">
+        <div class="provider-header">
+          <div class="provider-icon"><svg viewBox="0 0 24 24"><path d="M24 22.525H0L12 1.475 24 22.525z"/></svg></div>
+          <div class="provider-name">Vercel</div>
+        </div>
+        <span class="provider-role">Frontend · CDN global · auto-deploy</span>
+        <div class="provider-desc">Sirve la app React construida con Vite. Cada push a GitHub dispara un deploy automático. Free tier con CDN global y HTTPS incluidos.</div>
+      </div>
+
+      <div class="provider-card" style="--pc: var(--col-railway)">
+        <div class="provider-header">
+          <div class="provider-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16a1 1 0 0 1 1 1v3H3V5a1 1 0 0 1 1-1zm-1 6h18v4H3v-4zm0 6h18v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3z"/></svg></div>
+          <div class="provider-name">Railway</div>
+        </div>
+        <span class="provider-role">Backend · WebSockets · auto-deploy</span>
+        <div class="provider-desc">Corre el servidor Node.js con Socket.IO. Las WebSockets requieren un proceso persistente — por eso el backend vive aquí y no en Vercel.</div>
+      </div>
+
+      <div class="provider-card" style="--pc: var(--col-supabase)">
+        <div class="provider-header">
+          <div class="provider-icon"><svg viewBox="0 0 24 24"><path d="M21.362 9.354H12V.396a.396.396 0 0 0-.716-.233L2.203 12.424l-.401.562a1.04 1.04 0 0 0 .836 1.659H12v8.959a.396.396 0 0 0 .716.233l9.081-12.261.401-.562a1.04 1.04 0 0 0-.836-1.66z"/></svg></div>
+          <div class="provider-name">Supabase</div>
+        </div>
+        <span class="provider-role">Base de datos · Auth</span>
+        <div class="provider-desc">PostgreSQL hosteado con API REST auto-generada. Gestiona el login con Google OAuth y almacena quizzes, preguntas y respuestas.</div>
+      </div>
+
+      <div class="provider-card" style="--pc: var(--col-google)">
+        <div class="provider-header">
+          <div class="provider-icon"><svg viewBox="0 0 24 24"><path d="M21.35 11.1H12v3.2h5.59c-.26 1.34-1.04 2.48-2.18 3.24v2.69h3.52c2.06-1.9 3.25-4.7 3.25-8.04 0-.66-.06-1.3-.16-1.92l-.67.83zM12 22c2.7 0 4.96-.89 6.62-2.42l-3.52-2.69c-.9.6-2.05.96-3.1.96-2.38 0-4.4-1.6-5.12-3.76H3.24v2.78C4.9 19.98 8.2 22 12 22zM6.88 14.09A6.08 6.08 0 0 1 6.56 12c0-.72.12-1.42.32-2.09V7.13H3.24A10.02 10.02 0 0 0 2 12c0 1.62.39 3.14 1.08 4.5l3.8-2.41zM12 5.96c1.34 0 2.54.46 3.49 1.36l2.6-2.6C16.56 3.3 14.44 2.4 12 2.4 8.2 2.4 4.9 4.42 3.24 7.5l3.64 2.78C7.6 7.57 9.62 5.96 12 5.96z"/></svg></div>
+          <div class="provider-name">Google</div>
+        </div>
+        <span class="provider-role">Auth · OAuth 2.0</span>
+        <div class="provider-desc">Proveedor de identidad para el login del host. Supabase maneja el flujo OAuth — el usuario inicia sesión con su cuenta Google sin que la app toque las credenciales.</div>
+      </div>
+
+    </div>
+
+    <div class="ws-note">
+      <div class="ws-note-title">¿Qué es un WebSocket?</div>
+      <p class="ws-note-body">HTTP funciona con el modelo pregunta-respuesta: el cliente pide y el servidor responde. Con WebSocket se abre un canal bidireccional y persistente entre el cliente y el servidor — lo que permite que el servidor envíe datos al cliente en cualquier momento, sin que éste tenga que preguntar. Así todos los jugadores reciben la misma pregunta en el instante exacto y el puntaje se actualiza en vivo sin polling.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <p class="section-eyebrow">Infraestructura</p>
+    <h2 class="section-title">Diagrama de servicios</h2>
+
+    <div class="infra-wrap">
+      <svg class="infra-svg" viewBox="0 0 700 450" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr"       markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto">
+            <path d="M0,0.5 L6,3 L0,5.5 L1.2,3 Z" class="d-mark"/>
+          </marker>
+          <marker id="arr-ws"    markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto">
+            <path d="M0,0.5 L6,3 L0,5.5 L1.2,3 Z" class="d-mark-ws"/>
+          </marker>
+          <marker id="arr-ws-r"  markerWidth="7" markerHeight="7" refX="0.5" refY="3" orient="auto-start-reverse">
+            <path d="M0,0.5 L6,3 L0,5.5 L1.2,3 Z" class="d-mark-ws"/>
+          </marker>
+          <marker id="arr-oauth" markerWidth="7" markerHeight="7" refX="5.5" refY="3" orient="auto">
+            <path d="M0,0.5 L6,3 L0,5.5 L1.2,3 Z" class="d-mark-oauth"/>
+          </marker>
+        </defs>
+
+        <rect x="10" y="8" width="680" height="220" rx="8" class="d-zone-deploy"/>
+        <text x="24" y="28" class="d-zone-label">PIPELINE DE DEPLOY</text>
+
+        <rect x="22" y="84" width="134" height="52" rx="5" class="d-node"/>
+        <rect x="22" y="84" width="134" height="3" rx="2" style="fill:var(--col-claude)"/>
+        <text x="89" y="107" class="d-node-name" text-anchor="middle">Dev + Claude</text>
+        <text x="89" y="120" class="d-node-sub"  text-anchor="middle">Vibe-coding</text>
+
+        <rect x="220" y="84" width="110" height="52" rx="5" class="d-node"/>
+        <rect x="220" y="84" width="110" height="3" rx="2" style="fill:var(--col-github)"/>
+        <text x="275" y="107" class="d-node-name" text-anchor="middle">GitHub</text>
+        <text x="275" y="120" class="d-node-sub"  text-anchor="middle">Repositorio</text>
+
+        <rect x="414" y="34" width="120" height="52" rx="5" class="d-node"/>
+        <rect x="414" y="34" width="120" height="3" rx="2" style="fill:var(--col-vercel)"/>
+        <text x="474" y="56" class="d-node-name" text-anchor="middle">Vercel</text>
+        <text x="474" y="68" class="d-node-sub"  text-anchor="middle">Frontend</text>
+        <text x="474" y="79" class="d-node-sub"  text-anchor="middle">auto-deploy</text>
+
+        <rect x="414" y="100" width="120" height="52" rx="5" class="d-node"/>
+        <rect x="414" y="100" width="120" height="3" rx="2" style="fill:var(--col-railway)"/>
+        <text x="474" y="122" class="d-node-name" text-anchor="middle">Railway</text>
+        <text x="474" y="134" class="d-node-sub"  text-anchor="middle">Backend</text>
+        <text x="474" y="145" class="d-node-sub"  text-anchor="middle">auto-deploy</text>
+
+        <rect x="414" y="162" width="120" height="54" rx="5" class="d-node"/>
+        <rect x="414" y="162" width="120" height="3" rx="2" style="fill:var(--col-supabase)"/>
+        <text x="474" y="183" class="d-node-name" text-anchor="middle">Supabase</text>
+        <text x="474" y="195" class="d-node-sub"  text-anchor="middle">Migrations</text>
+        <text x="474" y="207" class="d-node-sub"  text-anchor="middle">supabase CLI</text>
+
+        <line x1="156" y1="110" x2="220" y2="110" class="d-line" marker-end="url(#arr)"/>
+        <text x="188" y="102" class="d-label" text-anchor="middle">push</text>
+
+        <path d="M330,100 C376,100 390,54 414,54" class="d-line" marker-end="url(#arr)" fill="none"/>
+        <line x1="330" y1="112" x2="414" y2="125" class="d-line" marker-end="url(#arr)"/>
+        <path d="M330,120 C376,120 390,178 414,178" class="d-line" marker-end="url(#arr)" fill="none"/>
+        <text x="370" y="106" class="d-label" text-anchor="middle">deploy</text>
+
+        <rect x="10" y="236" width="680" height="206" rx="8" class="d-zone"/>
+        <text x="24" y="256" class="d-zone-label">RUNTIME</text>
+
+        <rect x="18" y="268" width="108" height="68" rx="5" class="d-node"/>
+        <rect x="18" y="268" width="108" height="3" rx="2" style="fill:var(--text-faint)"/>
+        <text x="72" y="292" class="d-node-name" text-anchor="middle">Browser</text>
+        <text x="72" y="305" class="d-node-sub"  text-anchor="middle">jugador / host</text>
+        <text x="72" y="317" class="d-node-sub"  text-anchor="middle">fedehoot.vercel.app</text>
+
+        <rect x="190" y="270" width="116" height="62" rx="5" class="d-node"/>
+        <rect x="190" y="270" width="116" height="3" rx="2" style="fill:var(--col-vercel)"/>
+        <text x="248" y="294" class="d-node-name" text-anchor="middle">Vercel</text>
+        <text x="248" y="307" class="d-node-sub"  text-anchor="middle">React app</text>
+        <text x="248" y="319" class="d-node-sub"  text-anchor="middle">estático / CDN</text>
+
+        <rect x="374" y="270" width="130" height="62" rx="5" class="d-node"/>
+        <rect x="374" y="270" width="130" height="3" rx="2" style="fill:var(--col-railway)"/>
+        <text x="439" y="294" class="d-node-name" text-anchor="middle">Railway</text>
+        <text x="439" y="307" class="d-node-sub"  text-anchor="middle">Node.js</text>
+        <text x="439" y="319" class="d-node-sub"  text-anchor="middle">Socket.IO</text>
+
+        <rect x="572" y="262" width="116" height="76" rx="5" class="d-node"/>
+        <rect x="572" y="262" width="116" height="3" rx="2" style="fill:var(--col-supabase)"/>
+        <text x="630" y="285" class="d-node-name" text-anchor="middle">Supabase</text>
+        <text x="630" y="298" class="d-node-sub"  text-anchor="middle">PostgreSQL</text>
+        <text x="630" y="309" class="d-node-sub"  text-anchor="middle">Auth</text>
+        <text x="630" y="320" class="d-node-sub"  text-anchor="middle">REST API</text>
+
+        <rect x="572" y="368" width="116" height="52" rx="5" class="d-node"/>
+        <rect x="572" y="368" width="116" height="3" rx="2" style="fill:var(--col-google)"/>
+        <text x="630" y="392" class="d-node-name" text-anchor="middle">Google</text>
+        <text x="630" y="405" class="d-node-sub"  text-anchor="middle">OAuth 2.0</text>
+
+        <line x1="126" y1="300" x2="190" y2="300" class="d-line" marker-end="url(#arr)"/>
+        <text x="158" y="292" class="d-label" text-anchor="middle">HTTPS</text>
+
+        <line x1="306" y1="300" x2="374" y2="300" class="d-line" marker-end="url(#arr)"/>
+        <text x="340" y="292" class="d-label" text-anchor="middle">/api proxy</text>
+
+        <line x1="504" y1="300" x2="572" y2="300" class="d-line" marker-end="url(#arr)"/>
+        <text x="538" y="292" class="d-label" text-anchor="middle">SQL</text>
+
+        <path d="M374,318 C300,358 188,358 126,318" class="d-line-ws" marker-end="url(#arr-ws)" marker-start="url(#arr-ws-r)"/>
+        <text x="250" y="366" class="d-label-ws" text-anchor="middle">WebSocket</text>
+
+        <line x1="630" y1="338" x2="630" y2="368" class="d-line" marker-end="url(#arr)"/>
+        <text x="646" y="356" class="d-label" text-anchor="start">OAuth</text>
+
+        <path d="M72,336 C72,436 572,438 572,394" class="d-line-oauth" marker-end="url(#arr-oauth)"/>
+        <text x="298" y="442" class="d-label-oauth" text-anchor="middle">Google OAuth (auth flow)</text>
+      </svg>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>
