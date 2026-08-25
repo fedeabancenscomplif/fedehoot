@@ -1,0 +1,477 @@
+[
+  {
+    "title": "Clase 1 · Sistema financiero y APIs",
+    "questions": [
+      {
+        "text": "El sistema financiero conecta ahorristas con quienes necesitan capital. ¿Cómo se llama esta función?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Pagos", "is_correct": false },
+          { "text": "Intermediación", "is_correct": true },
+          { "text": "Risk transfer", "is_correct": false },
+          { "text": "Price discovery", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Cuál de estas características NO diferencia a las fintechs de los bancos tradicionales?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Nacen digitales", "is_correct": false },
+          { "text": "Son data-driven", "is_correct": false },
+          { "text": "Son UX-first", "is_correct": false },
+          { "text": "Tienen más sucursales físicas", "is_correct": true }
+        ]
+      },
+      {
+        "text": "Según el Reporte CAF 2025, ¿qué porcentaje de las fintechs argentinas identifica espacio de cooperación con la industria bancaria?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "45%", "is_correct": false },
+          { "text": "65%", "is_correct": false },
+          { "text": "85%", "is_correct": true },
+          { "text": "95%", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Qué etapa del fintech se caracteriza por Embedded Finance, BaaS y tokenización — donde cualquier empresa puede ser fintech?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Infra B2B (1990s–2008)", "is_correct": false },
+          { "text": "Consumer B2C (2008–2018)", "is_correct": false },
+          { "text": "Everything-as-a-fintech (~2018+)", "is_correct": true },
+          { "text": "Open Banking (2022+)", "is_correct": false }
+        ]
+      },
+      {
+        "text": "En una API REST, ¿qué método HTTP se usa típicamente para CREAR un recurso nuevo?",
+        "time_limit": 15,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "GET", "is_correct": false },
+          { "text": "PUT", "is_correct": false },
+          { "text": "POST", "is_correct": true },
+          { "text": "DELETE", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Qué hace un servidor DNS?",
+        "time_limit": 15,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Encripta las comunicaciones HTTPS", "is_correct": false },
+          { "text": "Traduce dominios a direcciones IP", "is_correct": true },
+          { "text": "Procesa pagos online", "is_correct": false },
+          { "text": "Gestiona bases de datos relacionales", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Cuál de estos formatos de datos es el más popular en APIs modernas?",
+        "time_limit": 15,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "XML", "is_correct": false },
+          { "text": "CSV", "is_correct": false },
+          { "text": "YAML", "is_correct": false },
+          { "text": "JSON", "is_correct": true }
+        ]
+      },
+      {
+        "text": "¿Cuál de estos organismos regula el sistema bancario en Argentina?",
+        "time_limit": 15,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "CNV", "is_correct": false },
+          { "text": "BCRA", "is_correct": true },
+          { "text": "UIF", "is_correct": false },
+          { "text": "SSN", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Cuáles de estas son funciones del sistema financiero?",
+        "time_limit": 25,
+        "type": "multiple",
+        "image_url": null,
+        "answers": [
+          { "text": "Intermediación", "is_correct": true },
+          { "text": "Pagos", "is_correct": true },
+          { "text": "Producción industrial", "is_correct": false },
+          { "text": "Risk transfer", "is_correct": true }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Clase 2 · Banca y medios de pago",
+    "questions": [
+      {
+        "text": "¿Cómo 'crea dinero' un banco en el sistema de reserva fraccionaria?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Imprimiendo billetes físicos", "is_correct": false },
+          { "text": "Solicitando autorización al BCRA", "is_correct": false },
+          { "text": "Al realizar un préstamo, registrando un asiento contable", "is_correct": true },
+          { "text": "Comprando dólares en el mercado", "is_correct": false }
+        ]
+      },
+      {
+        "text": "En Argentina, ¿hasta qué monto garantiza el FGS (via SEDESA) los depósitos por depositante y entidad?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "ARS 1.000.000", "is_correct": false },
+          { "text": "ARS 10.000.000", "is_correct": false },
+          { "text": "ARS 50.000.000", "is_correct": true },
+          { "text": "ARS 100.000.000", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Cuál es el plazo mínimo de un plazo fijo en Argentina?",
+        "time_limit": 15,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "7 días", "is_correct": false },
+          { "text": "30 días", "is_correct": true },
+          { "text": "60 días", "is_correct": false },
+          { "text": "90 días", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Qué es un PSP (Proveedor de Servicio de Pagos)?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Un banco con licencia del BCRA para intermediar", "is_correct": false },
+          { "text": "Una entidad que capta depósitos en CVU pero no puede intermediar", "is_correct": true },
+          { "text": "Una compensadora interbancaria", "is_correct": false },
+          { "text": "Un fondo de money market", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Qué diferencia al RTGS del sistema de Net Deferred Settlement?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "El RTGS liquida saldos netos al final del día", "is_correct": false },
+          { "text": "El RTGS liquida cada transacción en tiempo real; el DNS compensa saldos netos diferidos", "is_correct": true },
+          { "text": "El RTGS es solo para transferencias internacionales", "is_correct": false },
+          { "text": "No hay diferencia práctica entre ambos", "is_correct": false }
+        ]
+      },
+      {
+        "text": "En el four-party model de pagos con tarjeta en Argentina, ¿qué fee NO está regulado por el BCRA?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Interchange fee", "is_correct": false },
+          { "text": "Network fee", "is_correct": false },
+          { "text": "Acquirer/gateway fee", "is_correct": true },
+          { "text": "Todos están regulados", "is_correct": false }
+        ]
+      },
+      {
+        "text": "En una compra de $10.000 con tarjeta en Argentina, ¿cuánto recibe aproximadamente el comercio?",
+        "time_limit": 25,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "$9.900–$9.950", "is_correct": false },
+          { "text": "$9.450–$9.650", "is_correct": true },
+          { "text": "$9.000–$9.200", "is_correct": false },
+          { "text": "$8.500–$8.800", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Qué es SWIFT en el contexto de las transferencias internacionales?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Un banco central global que liquida transacciones", "is_correct": false },
+          { "text": "Un protocolo de mensajería, no de transmisión de dinero", "is_correct": true },
+          { "text": "Una moneda digital para pagos cross-border", "is_correct": false },
+          { "text": "El sistema de reservas fraccionarias internacional", "is_correct": false }
+        ]
+      },
+      {
+        "text": "En el Debin spot, ¿quién inicia la transferencia?",
+        "time_limit": 15,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "El banco del pagador", "is_correct": false },
+          { "text": "El pagador", "is_correct": false },
+          { "text": "El receptor/cobrador", "is_correct": true },
+          { "text": "La compensadora COELSA", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Cuáles son fuentes de fondeo de un banco?",
+        "time_limit": 25,
+        "type": "multiple",
+        "image_url": null,
+        "answers": [
+          { "text": "Depósitos del público", "is_correct": true },
+          { "text": "Emisión de bonos", "is_correct": true },
+          { "text": "Venta de acciones en el mercado de capitales", "is_correct": false },
+          { "text": "Redescuentos del banco central", "is_correct": true }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Clase 3 · AI y LLMs",
+    "questions": [
+      {
+        "text": "¿Qué paper de 2017 introdujo la arquitectura Transformer?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "\"BERT: Pre-training of Deep Bidirectional Transformers\"", "is_correct": false },
+          { "text": "\"Attention Is All You Need\"", "is_correct": true },
+          { "text": "\"GPT-3: Language Models are Few-Shot Learners\"", "is_correct": false },
+          { "text": "\"Deep Learning for NLP\"", "is_correct": false }
+        ]
+      },
+      {
+        "text": "En los embeddings, ¿qué resultado se obtiene de: vector(\"rey\") − vector(\"hombre\") + vector(\"mujer\")?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "vector(\"princesa\")", "is_correct": false },
+          { "text": "vector(\"reina\")", "is_correct": true },
+          { "text": "vector(\"corona\")", "is_correct": false },
+          { "text": "vector(\"poder\")", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Qué son los tokens en los LLMs?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Palabras completas del diccionario", "is_correct": false },
+          { "text": "Letras individuales", "is_correct": false },
+          { "text": "Fragmentos de texto subpalabra, entre letras y palabras enteras", "is_correct": true },
+          { "text": "Oraciones completas", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Cuál es la diferencia clave entre las RNNs y Self-Attention (Transformers)?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Las RNNs son más rápidas y precisas", "is_correct": false },
+          { "text": "Las RNNs miran todos los tokens a la vez; Transformers leen token por token", "is_correct": false },
+          { "text": "Transformers miran todos los tokens a la vez; RNNs leen token por token y pierden contexto en textos largos", "is_correct": true },
+          { "text": "No hay diferencia práctica en resultados", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Cuánto costó aproximadamente el pre-training de GPT-4 solo en compute?",
+        "time_limit": 15,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "USD 100K", "is_correct": false },
+          { "text": "USD 1M", "is_correct": false },
+          { "text": "USD 10M", "is_correct": false },
+          { "text": "Más de USD 100M", "is_correct": true }
+        ]
+      },
+      {
+        "text": "¿Qué es RAG (Retrieval-Augmented Generation)?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Un tipo de red neuronal recurrente", "is_correct": false },
+          { "text": "Buscar los fragmentos relevantes y enviarlos al LLM en lugar de todo el contexto", "is_correct": true },
+          { "text": "El proceso de fine-tuning con feedback humano (RLHF)", "is_correct": false },
+          { "text": "Un benchmark para comparar modelos de lenguaje", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Qué es MCP (Model Context Protocol)?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Un lenguaje de programación para construir agentes AI", "is_correct": false },
+          { "text": "Protocolo abierto de Anthropic para estandarizar la integración de herramientas con LLMs (como USB-C para AI tools)", "is_correct": true },
+          { "text": "Un tipo de fine-tuning supervisado", "is_correct": false },
+          { "text": "La unidad de medida del contexto de un modelo", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Cuál es aproximadamente el tamaño actual de la context window de Claude y GPT?",
+        "time_limit": 15,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "4K tokens (como GPT-3 en 2020)", "is_correct": false },
+          { "text": "32K tokens", "is_correct": false },
+          { "text": "200K tokens", "is_correct": false },
+          { "text": "~1 millón de tokens", "is_correct": true }
+        ]
+      },
+      {
+        "text": "¿Cuáles de estos son modelos de ML supervisados que aparecieron antes del Deep Learning?",
+        "time_limit": 25,
+        "type": "multiple",
+        "image_url": null,
+        "answers": [
+          { "text": "Naive Bayes", "is_correct": true },
+          { "text": "Regresión Logística", "is_correct": true },
+          { "text": "Transformer", "is_correct": false },
+          { "text": "Decision Trees", "is_correct": true }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Clase 3 · Git",
+    "questions": [
+      {
+        "text": "¿Cuál es la diferencia entre Git y GitHub?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Son lo mismo, diferentes nombres", "is_correct": false },
+          { "text": "Git es la herramienta local de versionado; GitHub es el servidor que hostea repos y agrega colaboración", "is_correct": true },
+          { "text": "GitHub reemplaza a Git en proyectos modernos", "is_correct": false },
+          { "text": "Git es de Microsoft, GitHub es open source", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Cuál es el orden correcto para registrar y subir cambios en Git?",
+        "time_limit": 20,
+        "type": "order",
+        "image_url": null,
+        "answers": [
+          { "text": "git add", "is_correct": true },
+          { "text": "git commit", "is_correct": true },
+          { "text": "git push", "is_correct": true }
+        ]
+      },
+      {
+        "text": "¿Quién creó Git y cuándo?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Mark Zuckerberg, 2004", "is_correct": false },
+          { "text": "Linus Torvalds, 2005", "is_correct": true },
+          { "text": "GitHub Inc., 2008", "is_correct": false },
+          { "text": "Microsoft, 2018", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Qué hace git rebase a diferencia de git merge?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Crea un commit de unión entre las dos ramas", "is_correct": false },
+          { "text": "Reaplica tus commits sobre la base nueva, generando historia lineal con SHAs nuevos", "is_correct": true },
+          { "text": "Elimina la rama sin guardar los cambios", "is_correct": false },
+          { "text": "Copia los commits sin modificar sus SHAs", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Cuándo ocurre un conflicto de merge en Git?",
+        "time_limit": 15,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Cuando dos personas hacen push al mismo tiempo", "is_correct": false },
+          { "text": "Cuando dos ramas cambian las mismas líneas del mismo archivo", "is_correct": true },
+          { "text": "Cuando una branch tiene más commits que main", "is_correct": false },
+          { "text": "Cuando el repositorio remoto no está disponible", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Qué hace git stash?",
+        "time_limit": 15,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Elimina permanentemente los cambios sin commitear", "is_correct": false },
+          { "text": "Guarda los cambios sucios temporalmente y deja el árbol limpio", "is_correct": true },
+          { "text": "Fusiona dos branches sin crear un commit de merge", "is_correct": false },
+          { "text": "Revierte el último commit", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Dónde viven los workflows de GitHub Actions?",
+        "time_limit": 15,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "En la carpeta /workflows de la raíz", "is_correct": false },
+          { "text": "En .github/workflows", "is_correct": true },
+          { "text": "En un archivo .gitconfig del repositorio", "is_correct": false },
+          { "text": "En la rama gh-actions", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Qué es un worktree en Git?",
+        "time_limit": 20,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Una carpeta temporal para archivos eliminados", "is_correct": false },
+          { "text": "Un segundo directorio de trabajo del mismo repo con su propia branch, sin clonar de nuevo", "is_correct": true },
+          { "text": "El historial de commits de una branch", "is_correct": false },
+          { "text": "El área de staging de un repositorio", "is_correct": false }
+        ]
+      },
+      {
+        "text": "¿Qué hace git blame?",
+        "time_limit": 15,
+        "type": "single",
+        "image_url": null,
+        "answers": [
+          { "text": "Muestra quién introdujo cada línea, en qué commit y cuándo", "is_correct": true },
+          { "text": "Deshace los cambios de un colaborador específico", "is_correct": false },
+          { "text": "Envía una notificación al autor del bug", "is_correct": false },
+          { "text": "Lista todos los commits de un autor", "is_correct": false }
+        ]
+      },
+      {
+        "text": "En el ciclo de vida de un PR, ¿cuál es el orden correcto?",
+        "time_limit": 25,
+        "type": "order",
+        "image_url": null,
+        "answers": [
+          { "text": "Branch desde main", "is_correct": true },
+          { "text": "Abrir Pull Request", "is_correct": true },
+          { "text": "Checks (lint/tests/build)", "is_correct": true },
+          { "text": "Review y merge", "is_correct": true }
+        ]
+      }
+    ]
+  }
+]
