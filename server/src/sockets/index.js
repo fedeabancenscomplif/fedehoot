@@ -4,6 +4,10 @@ import { supabase } from '../db.js';
 const rooms = new Map();        // roomCode → GameRoom
 const socketToRoom = new Map(); // socketId → roomCode
 
+// Coalesce bursts (e.g. a whole class joining at once) into one emit per window
+const PLAYER_LIST_THROTTLE_MS = 300;
+const ANSWER_COUNT_THROTTLE_MS = 200;
+
 function genCode() {
   let code;
   do { code = Math.random().toString(36).slice(2, 8).toUpperCase(); }
@@ -28,6 +32,29 @@ async function loadQuiz(quizId) {
   return quiz;
 }
 
+// Only the host renders the full player list; players just show how many joined.
+// Sending the full list to everyone on every join is O(N²) messages of O(N) size.
+function schedulePlayerListUpdate(io, room, roomCode) {
+  if (room.playerListTimer) return;
+  room.playerListTimer = setTimeout(() => {
+    room.playerListTimer = null;
+    if (rooms.get(roomCode) !== room) return;
+    io.to(room.hostSocketId).emit('game:player-list', { players: room.getPlayerList() });
+    io.to(roomCode).except(room.hostSocketId).emit('game:player-count', { count: room.players.size });
+  }, PLAYER_LIST_THROTTLE_MS);
+}
+
+function scheduleAnswerCountUpdate(io, room) {
+  if (room.answerCountTimer) return;
+  room.answerCountTimer = setTimeout(() => {
+    room.answerCountTimer = null;
+    io.to(room.hostSocketId).emit('game:answer-count', {
+      answered: room.currentAnswers.size,
+      total: room.players.size,
+    });
+  }, ANSWER_COUNT_THROTTLE_MS);
+}
+
 function endQuestion(io, room, roomCode) {
   if (room.state !== 'QUESTION') return;
   const data = room.endQuestion();
@@ -44,6 +71,7 @@ function endQuestion(io, room, roomCode) {
       isCorrect: r.isCorrect,
       pointsEarned: r.pointsEarned,
       totalScore: r.totalScore,
+      rank: r.rank,
       correctPositions: r.correctPositions,
       totalPositions: r.totalPositions,
     });
@@ -92,14 +120,18 @@ export function setupSockets(io) {
       socket.join(code);
 
       socket.emit('player:joined', { nickname: nickname.trim(), roomCode: code });
-      io.to(code).emit('game:player-list', { players: room.getPlayerList() });
+      schedulePlayerListUpdate(io, room, code);
     });
 
     socket.on('player:request-state', () => {
       const roomCode = socketToRoom.get(socket.id);
       const room = rooms.get(roomCode);
       if (!room) return;
-      socket.emit('game:player-list', { players: room.getPlayerList() });
+      if (room.hostSocketId === socket.id) {
+        socket.emit('game:player-list', { players: room.getPlayerList() });
+      } else {
+        socket.emit('game:player-count', { count: room.players.size });
+      }
     });
 
     socket.on('host:start-game', () => {
@@ -123,9 +155,9 @@ export function setupSockets(io) {
       if (!result) return;
 
       socket.emit('player:answer-received');
-      io.to(room.hostSocketId).emit('game:answer-count', result);
 
       if (room.allAnswered()) endQuestion(io, room, roomCode);
+      else scheduleAnswerCountUpdate(io, room);
     });
 
     socket.on('host:next-question', () => {
@@ -136,6 +168,9 @@ export function setupSockets(io) {
       const result = room.nextQuestion();
       if (result.finished) {
         io.to(roomCode).emit('game:finished', { leaderboard: result.leaderboard });
+        for (const [socketId, { rank, score }] of result.ranks) {
+          io.to(socketId).emit('player:final-result', { rank, score });
+        }
         rooms.delete(roomCode);
       } else {
         io.to(roomCode).emit('game:question', result.question);
@@ -159,7 +194,7 @@ export function setupSockets(io) {
         rooms.delete(roomCode);
       } else {
         room.removePlayer(socket.id);
-        io.to(roomCode).emit('game:player-list', { players: room.getPlayerList() });
+        schedulePlayerListUpdate(io, room, roomCode);
       }
     });
   });

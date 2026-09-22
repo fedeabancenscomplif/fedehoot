@@ -38,7 +38,7 @@ export default function PlayGame() {
   const navigate = useNavigate();
 
   const [phase, setPhase] = useState('lobby');
-  const [players, setPlayers] = useState([]);
+  const [playerCount, setPlayerCount] = useState(0);
   const [question, setQuestion] = useState(null);
 
   // single
@@ -53,6 +53,7 @@ export default function PlayGame() {
   const [myResult, setMyResult] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [finalLeaderboard, setFinalLeaderboard] = useState([]);
+  const [finalResult, setFinalResult] = useState(null);
 
   const { nickname, roomCode } = state ?? {};
 
@@ -76,7 +77,7 @@ export default function PlayGame() {
       return;
     }
 
-    socket.on('game:player-list', ({ players }) => setPlayers(players));
+    socket.on('game:player-count', ({ count }) => setPlayerCount(count));
     socket.on('game:question', (q) => {
       setQuestion(q);
       setSelectedId(null);
@@ -93,6 +94,7 @@ export default function PlayGame() {
       setLeaderboard(leaderboard);
       setPhase('results');
     });
+    socket.on('player:final-result', (result) => setFinalResult(result));
     socket.on('game:finished', ({ leaderboard }) => {
       setFinalLeaderboard(leaderboard);
       setPhase('finished');
@@ -106,7 +108,8 @@ export default function PlayGame() {
     socket.emit('player:request-state');
 
     return () => {
-      socket.off('game:player-list');
+      socket.off('game:player-count');
+      socket.off('player:final-result');
       socket.off('game:question');
       socket.off('player:answer-received');
       socket.off('player:your-result');
@@ -164,7 +167,7 @@ export default function PlayGame() {
         </div>
         <p className="text-purple-200 animate-pulse text-lg">Esperando que el host empiece...</p>
         <div className="text-sm text-purple-300">
-          {players.length} jugador{players.length !== 1 ? 'es' : ''} en la sala
+          {playerCount} jugador{playerCount !== 1 ? 'es' : ''} en la sala
         </div>
         <button onClick={leave} className="text-xs text-purple-400 hover:text-purple-200 mt-4">
           Salir
@@ -362,7 +365,7 @@ export default function PlayGame() {
   }
 
   if (phase === 'results') {
-    const myPos = leaderboard.findIndex(p => p.nickname === nickname) + 1;
+    const myPos = myResult?.rank ?? leaderboard.findIndex(p => p.nickname === nickname) + 1;
     const type = question?.type ?? 'single';
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-6 text-center">
@@ -416,8 +419,8 @@ export default function PlayGame() {
   }
 
   if (phase === 'finished') {
-    const myPos = finalLeaderboard.findIndex(p => p.nickname === nickname) + 1;
-    const myScore = finalLeaderboard.find(p => p.nickname === nickname)?.score ?? 0;
+    const myPos = finalResult?.rank ?? finalLeaderboard.findIndex(p => p.nickname === nickname) + 1;
+    const myScore = finalResult?.score ?? finalLeaderboard.find(p => p.nickname === nickname)?.score ?? 0;
     const podiumEmojis = ['🥇', '🥈', '🥉'];
 
     return (

@@ -7,6 +7,9 @@ function shuffle(arr) {
   return a;
 }
 
+// Clients only render the top 10; each player gets their own rank separately
+const LEADERBOARD_SIZE = 10;
+
 export class GameRoom {
   constructor(roomCode, quiz, hostSocketId) {
     this.roomCode = roomCode;
@@ -18,17 +21,20 @@ export class GameRoom {
     this.questionTimer = null;
     this.questionStartTime = null;
     this.currentAnswers = new Map(); // socketId → { payload, timeMs }
+    this.nicknames = new Set();
   }
 
   addPlayer(socketId, nickname) {
     if (this.state !== 'LOBBY') return { error: 'La partida ya empezó' };
-    const taken = [...this.players.values()].some(p => p.nickname === nickname);
-    if (taken) return { error: 'Ese nombre ya está en uso' };
+    if (this.nicknames.has(nickname)) return { error: 'Ese nombre ya está en uso' };
+    this.nicknames.add(nickname);
     this.players.set(socketId, { nickname, score: 0 });
     return { ok: true };
   }
 
   removePlayer(socketId) {
+    const player = this.players.get(socketId);
+    if (player) this.nicknames.delete(player.nickname);
     this.players.delete(socketId);
   }
 
@@ -147,12 +153,15 @@ export class GameRoom {
       });
     }
 
+    const ranks = this.getRanks();
+    for (const r of playerResults) r.rank = ranks.get(r.socketId).rank;
+
     return {
       type,
       correctAnswerIds,
       correctOrderedIds,
       playerResults,
-      leaderboard: this.getLeaderboard(),
+      leaderboard: this.getLeaderboard(LEADERBOARD_SIZE),
     };
   }
 
@@ -160,15 +169,22 @@ export class GameRoom {
     this.currentQuestionIndex++;
     if (this.currentQuestionIndex >= this.quiz.questions.length) {
       this.state = 'FINISHED';
-      return { finished: true, leaderboard: this.getLeaderboard() };
+      return { finished: true, leaderboard: this.getLeaderboard(LEADERBOARD_SIZE), ranks: this.getRanks() };
     }
     this.state = 'QUESTION';
     return { finished: false, question: this._buildQuestionPayload() };
   }
 
-  getLeaderboard() {
+  getLeaderboard(limit = Infinity) {
     return [...this.players.values()]
       .map(p => ({ nickname: p.nickname, score: p.score }))
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+  }
+
+  // socketId → { rank, score }, rank 1-based in the same order as getLeaderboard()
+  getRanks() {
+    const sorted = [...this.players].sort((a, b) => b[1].score - a[1].score);
+    return new Map(sorted.map(([socketId, p], i) => [socketId, { rank: i + 1, score: p.score }]));
   }
 }
